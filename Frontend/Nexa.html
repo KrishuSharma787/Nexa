@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08080F">
+<meta name="description" content="Compare Uber, Ola, Rapido fares and Swiggy, Zomato menu prices side by side. Mumbai's price intelligence app.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nexa">
+<!-- Open Graph -->
+<meta property="og:title" content="Nexa — Mumbai Price Intelligence">
+<meta property="og:description" content="Compare ride fares and food prices across 5 platforms instantly.">
+<meta property="og:type" content="website">
+<title>Nexa — Mumbai Price Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08080F;--s1:#0F0F1A;--s2:#161625;--s3:#1E1E30;--s4:#26263A;
+  --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.11);--b3:rgba(255,255,255,.2);
+  --t1:#ECEEF8;--t2:#7878A0;--t3:#3E3E58;
+  --green:#00E5A0;--red:#FF4060;
+  --uber:#D8D8E8;--ola:#00B553;--rapido:#FFCC00;
+  --sw:#FF6B00;--zm:#E5273B;
+  --r:8px;--rl:14px;--f:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t1);font-family:var(--f);overflow-x:hidden;line-height:1.55}
+button{cursor:pointer;border:none;background:none;font-family:var(--f);color:inherit}
+input{font-family:var(--f);border:none;outline:none;color:inherit}
+ul{list-style:none}
+
+/* ── VIEWS ─────────────── */
+.view{display:none;min-height:100vh}
+.view.active{display:block;animation:fadeUp .2s var(--ease)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── NAV ─────────────────── */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 22px;height:52px;
+  background:rgba(8,8,15,.88);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--b1);position:sticky;top:0;z-index:80}
+.nav-logo{font-size:18px;font-weight:800;letter-spacing:-1px;cursor:pointer}
+.nav-logo em{color:var(--sw);font-style:normal}
+.nav-tabs{display:flex;gap:2px;background:var(--s1);border-radius:var(--r);padding:3px}
+.ntab{padding:6px 16px;font-size:12px;font-weight:500;color:var(--t2);border-radius:6px;cursor:pointer;transition:all .18s}
+.ntab.on{background:var(--s3);color:var(--t1)}
+
+/* ── HOME ─────────────────── */
+.home-wrap{max-width:800px;margin:0 auto;padding:80px 24px 60px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.home-eyebrow{font:600 10px/1 var(--mono);letter-spacing:3px;text-transform:uppercase;color:var(--t3);margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.home-eyebrow::before,.home-eyebrow::after{content:'';width:24px;height:1px;background:var(--t3)}
+.home-h1{font-size:clamp(42px,8vw,76px);font-weight:800;letter-spacing:-3px;line-height:.95;
+  background:linear-gradient(165deg,#fff 35%,rgba(255,255,255,.28));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:16px}
+.home-sub{font-size:16px;font-weight:300;color:var(--t2);max-width:400px;margin-bottom:52px;line-height:1.6}
+.home-sub strong{color:var(--t1);font-weight:500}
+.home-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:560px}
+.home-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rl);padding:28px 24px;
+  cursor:pointer;transition:transform .22s var(--ease),border-color .22s,box-shadow .22s;
+  text-align:left;position:relative;overflow:hidden}
+.home-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .22s;pointer-events:none}
+.hc-t::before{background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(100,160,255,.06),transparent)}
+.hc-f::before{background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(229,39,59,.06),transparent)}
+.home-card:hover{transform:translateY(-4px);border-color:var(--b2);box-shadow:0 16px 40px rgba(0,0,0,.4)}
+.home-card:hover::before{opacity:1}
+.hc-icon{font-size:32px;margin-bottom:12px;display:block;line-height:1}
+.hc-tag{font:600 9px/1 var(--mono);letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+.hc-title{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px}
+.hc-t .hc-title{color:#C8DCFF}
+.hc-f .hc-title{color:#FFD0CC}
+.hc-desc{font-size:12px;color:var(--t2);line-height:1.55;margin-bottom:16px}
+.hc-cta{font-size:11px;font-weight:600;color:var(--t3);transition:color .15s;display:flex;align-items:center;gap:4px}
+.home-card:hover .hc-cta{color:var(--t1)}
+.home-divider{width:100%;max-width:560px;border:none;border-top:1px solid var(--b1);margin:48px 0 32px}
+.home-stats{display:flex;gap:40px;justify-content:center;flex-wrap:wrap}
+.hs-n{font:700 22px/1 var(--mono);color:var(--t1)}
+.hs-l{font-size:11px;color:var(--t3);margin-top:3px}
+
+/* ── PAGE WRAP ─────────────── */
+.page-wrap{max-width:740px;margin:0 auto;padding:28px 20px 80px}
+.page-h1{font-size:clamp(24px,4vw,34px);font-weight:800;letter-spacing:-.5px;line-height:1.1;
+  margin-bottom:6px;overflow:visible;padding-right:4px}
+.t-h1 em{font-style:italic;background:linear-gradient(90deg,var(--sw),var(--rapido));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  display:inline;padding-right:3px}
+.f-h1 em{color:var(--zm)}
+.page-sub{font-size:13px;color:var(--t2);margin-bottom:24px}
+
+/* ── TIER PILLS ─────────────── */
+.tier-scroll{overflow-x:auto;margin-bottom:18px;-ms-overflow-style:none;scrollbar-width:none}
+.tier-scroll::-webkit-scrollbar{display:none}
+.tier-row{display:flex;gap:8px;width:max-content}
+.tier-pill{display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:10px 16px;min-width:60px;background:var(--s1);border:1px solid var(--b1);
+  border-radius:var(--r);cursor:pointer;transition:all .18s}
+.tier-pill.on{background:var(--s3);border-color:var(--b3)}
+.tp-icon{font-size:20px;line-height:1}
+.tp-name{font-size:10px;font-weight:600;color:var(--t2);letter-spacing:.3px}
+.tier-pill.on .tp-name{color:var(--t1)}
+
+/* ── SEARCH PANEL ─────────────── */
+.search-panel{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rl);padding:18px;margin-bottom:18px}
+.loc-grid{display:grid;grid-template-columns:1fr 38px 1fr;gap:10px;align-items:end;margin-bottom:12px}
+.loc-field{position:relative}
+.loc-lbl{display:block;font:600 9px/1 var(--mono);letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:5px}
+.loc-inp{width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);
+  padding:11px 14px;font-size:14px;font-weight:500;color:var(--t1);transition:border-color .18s}
+.loc-inp::placeholder{color:var(--t3);font-weight:300}
+.loc-inp:focus{border-color:var(--b3);background:var(--s3)}
+.loc-chip{display:none;font:600 9px/1 var(--mono);color:var(--sw);margin-top:3px}
+.swap-btn{width:38px;height:38px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);
+  display:flex;align-items:center;justify-content:center;color:var(--t2);align-self:center;margin-top:14px;transition:all .18s}
+.swap-btn:hover{background:var(--s3);color:var(--t1);border-color:var(--b2)}
+/* suggestions dropdown */
+.sug-list{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);
+  z-index:300;max-height:230px;overflow-y:auto;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.sug-list.open{display:block}
+.sug-item{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;
+  border-bottom:1px solid var(--b1);transition:background .12s}
+.sug-item:last-child{border-bottom:none}
+.sug-item:hover,.sug-item.highlighted{background:var(--s3)}
+.si-pin{font-size:11px;opacity:.4;flex-shrink:0}
+.si-name{font-size:13px;font-weight:500}
+.si-area{font-size:10px;color:var(--t3);margin-top:1px}
+/* quick routes */
+.qr-label{font:600 9px/1 var(--mono);letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:7px;margin-top:12px}
+.qr-row{display:flex;flex-wrap:wrap;gap:6px}
+.qr-btn{padding:5px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:4px;
+  font-size:11px;font-weight:500;color:var(--t2);cursor:pointer;transition:all .14s}
+.qr-btn:hover{background:var(--s3);color:var(--t1);border-color:var(--b2)}
+
+/* ── TRAVEL RESULTS ─────────────── */
+#t-results{display:none}
+#t-results.show{display:block;animation:fadeUp .25s var(--ease)}
+.result-meta-row{margin-bottom:14px}
+.result-route{display:flex;align-items:center;gap:7px;font-size:15px;font-weight:700;flex-wrap:wrap;margin-bottom:4px}
+.r-loc{background:var(--s2);border:1px solid var(--b1);padding:3px 9px;border-radius:4px;font-size:13px;font-weight:500}
+.r-arr{color:var(--t3)}
+.result-dist{font:400 11px/1 var(--mono);color:var(--t3)}
+/* skeleton */
+.skel-wrap{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.skel-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rl);height:80px;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.45}50%{opacity:.9}}
+/* fare cards */
+.fare-cards{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.fare-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--rl);
+  padding:14px 18px;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:14px;
+  opacity:0;transform:translateY(6px);transition:opacity .28s,transform .28s}
+.fare-card.vis{opacity:1;transform:translateY(0)}
+.fare-card.cheapest{border-color:rgba(0,229,160,.25);background:rgba(0,229,160,.025)}
+.fc-left{display:flex;align-items:center;gap:10px;min-width:0}
+.fc-icon{font-size:18px;flex-shrink:0}
+.fc-name{font-size:14px;font-weight:600}
+.fc-sub{font-size:10px;color:var(--t3);margin-top:1px}
+.cheap-pill{font:700 8px/1 var(--mono);letter-spacing:1.2px;
+  background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2);
+  padding:2px 7px;border-radius:3px;margin-left:6px;flex-shrink:0;white-space:nowrap}
+.fc-price{font:700 24px/1 var(--mono);color:var(--t1);text-align:right;flex-shrink:0}
+.fare-card.cheapest .fc-price{color:var(--green)}
+.book-btn{padding:7px 14px;background:var(--s3);border:1px solid var(--b2);border-radius:5px;
+  font-size:11px;font-weight:600;color:var(--t1);transition:all .14s;white-space:nowrap;flex-shrink:0}
+.book-btn:hover{background:var(--s4);border-color:var(--b3)}
+.book-btn.go{background:var(--green);color:#000;border-color:var(--green)}
+.saving-bar{background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.1);
+  border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--t2);margin-bottom:14px}
+.saving-bar strong{color:var(--green)}
+.no-route{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);
+  padding:20px;font-size:13px;color:var(--t2);text-align:center;margin-bottom:14px}
+/* formula note */
+.formula-note{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:14px 16px;margin-top:4px}
+.fn-label{font:600 9px/1 var(--mono);letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:10px}
+.fn-grid{display:flex;flex-wrap:wrap;gap:14px}
+.fn-item{min-width:130px}
+.fn-plat{font-size:12px;font-weight:600;margin-bottom:3px}
+.fn-formula{font:400 10px/1.7 var(--mono);color:var(--t3)}
+.fn-disc{font-size:10px;color:var(--t3);font-style:italic;margin-top:8px}
+
+/* ── FOOD WRAP ─────────────── */
+.food-wrap{max-width:960px;margin:0 auto;padding:28px 20px 100px}
+/* search */
+.fs-wrap{position:relative;margin-bottom:20px}
+.fs-input{width:100%;background:var(--s1);border:1.5px solid var(--b2);border-radius:40px;
+  padding:13px 20px;font-size:15px;font-weight:500;color:var(--t1);transition:all .2s}
+.fs-input::placeholder{color:var(--t3);font-weight:300}
+.fs-input:focus{border-color:rgba(229,39,59,.35);background:var(--s2)}
+.fs-drop{position:absolute;top:calc(100%+5px);left:0;right:0;
+  background:var(--s2);border:1px solid var(--b2);border-radius:var(--rl);
+  z-index:200;max-height:360px;overflow-y:auto;box-shadow:0 14px 36px rgba(0,0,0,.55);display:none}
+.fs-drop.open{display:block}
+.fd-sec-lbl{padding:8px 16px 4px;font:600 9px/1 var(--mono);letter-spacing:2px;text-transform:uppercase;color:var(--t3)}
+.fd-item{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background .12s;border-top:1px solid var(--b1)}
+.fd-item:hover{background:var(--s3)}
+.fd-thumb{width:34px;height:34px;border-radius:5px;object-fit:cover;background:var(--s3);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden}
+.fd-name{font-size:13px;font-weight:500}
+.fd-sub{font-size:10px;color:var(--t3)}
+.fd-price{margin-left:auto;font:700 12px/1 var(--mono);color:var(--green);flex-shrink:0}
+/* controls */
+.food-controls{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.plat-tabs{display:flex;gap:2px;background:var(--s1);border-radius:var(--r);padding:3px}
+.ptab{padding:7px 14px;font-size:12px;font-weight:500;color:var(--t2);border-radius:6px;cursor:pointer;transition:all .18s}
+.ptab.on{background:var(--s3);color:var(--t1)}
+.ptab[data-p=swiggy].on{color:var(--sw)}
+.ptab[data-p=zomato].on{color:var(--zm)}
+/* cuisine chips */
+.cuis-scroll{overflow-x:auto;margin-bottom:18px;-ms-overflow-style:none;scrollbar-width:none}
+.cuis-scroll::-webkit-scrollbar{display:none}
+.cuis-row{display:flex;gap:7px;width:max-content}
+.cuis-chip{display:flex;align-items:center;gap:5px;padding:7px 13px;
+  background:var(--s1);border:1px solid var(--b1);border-radius:20px;
+  cursor:pointer;transition:all .18s;white-space:nowrap}
+.cuis-chip.on{border-color:var(--zm);background:rgba(229,39,59,.07)}
+.cuis-icon{font-size:13px}
+.cuis-name{font-size:12px;font-weight:500;color:var(--t2)}
+.cuis-chip.on .cuis-name{color:var(--t1)}
+/* grid */
+.r-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(278px,1fr));gap:14px}
+.r-card{background:var(--s1);border-radius:var(--rl);overflow:hidden;cursor:pointer;
+  border:1px solid var(--b1);transition:transform .2s var(--ease),box-shadow .2s,border-color .2s;
+  animation:fadeUp .3s var(--ease) calc(var(--i,0)*28ms) backwards}
+.r-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(0,0,0,.45);border-color:var(--b2)}
+.r-img-box{height:155px;overflow:hidden;position:relative;background:var(--s2)}
+.r-img{width:100%;height:100%;object-fit:cover;transition:transform .4s var(--ease);filter:brightness(.82)}
+.r-card:hover .r-img{transform:scale(1.04);filter:brightness(1)}
+.r-img-fb{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:44px;background:var(--s2)}
+.r-img-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,8,15,.95) 0%,transparent 52%)}
+.r-img-rat{position:absolute;top:9px;right:9px;background:rgba(8,8,15,.7);
+  backdrop-filter:blur(6px);border:1px solid var(--b2);padding:3px 7px;
+  border-radius:4px;font-size:11px;font-weight:700;color:var(--green)}
+.r-plat-bads{position:absolute;top:9px;left:9px;display:flex;gap:3px}
+.rpb{font:700 9px/1 var(--mono);padding:2px 6px;border-radius:3px;letter-spacing:.3px}
+.rpb-sw{background:rgba(255,107,0,.2);color:var(--sw);border:1px solid rgba(255,107,0,.3)}
+.rpb-zm{background:rgba(229,39,59,.2);color:var(--zm);border:1px solid rgba(229,39,59,.3)}
+.r-body{padding:12px 14px 14px}
+.r-name{font-size:15px;font-weight:700;margin-bottom:2px;line-height:1.2}
+.r-cuisine{font-size:11px;color:var(--t3);margin-bottom:7px}
+.r-footer{display:flex;align-items:center;justify-content:space-between}
+.r-area{font-size:11px;color:var(--t3)}
+.r-price{font:400 11px/1 var(--mono);color:var(--t3)}
+.r-veg{font-size:10px;color:var(--green);font-weight:600;margin-top:5px}
+/* states */
+.st-empty{text-align:center;padding:56px 20px;color:var(--t3)}
+.st-icon{font-size:36px;margin-bottom:10px}
+.st-msg{font-size:14px;margin-bottom:6px;color:var(--t2)}
+.st-hint{font-size:12px}
+
+/* ── PANELS ─────────────── */
+.panel{position:fixed;inset:0;z-index:200;background:var(--bg);overflow-y:auto;display:none;flex-direction:column}
+.panel.open{display:flex;animation:slideUp .26s var(--ease)}
+@keyframes slideUp{from{transform:translateY(100%);opacity:.9}to{transform:translateY(0);opacity:1}}
+.p-nav{position:sticky;top:0;background:rgba(8,8,15,.9);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--b1);height:50px;padding:0 14px;
+  display:flex;align-items:center;gap:10px;z-index:10;flex-shrink:0}
+.p-back{font-size:20px;color:var(--t2);padding:4px;transition:color .14s}
+.p-back:hover{color:var(--t1)}
+.p-title{font-size:15px;font-weight:700}
+.p-sub{font-size:11px;color:var(--t3)}
+.p-bads-wrap{margin-left:auto;display:flex;gap:4px}
+.menu-hint{padding:9px 14px;background:var(--s1);border-bottom:1px solid var(--b1);font-size:11px;color:var(--t3)}
+.mh-green{color:var(--green);font-weight:600}
+/* menu items */
+.menu-cat-hdr{padding:13px 14px 5px;font:700 9px/1 var(--mono);letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--b1)}
+.dish-row{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--b1);transition:background .12s}
+.dish-row:hover{background:var(--s1)}
+.d-em{font-size:20px;flex-shrink:0}
+.d-info{flex:1;min-width:0}
+.d-name{font-size:13px;font-weight:500}
+.d-cat{font-size:10px;color:var(--t3);margin-top:1px}
+.d-prices{display:flex;gap:7px;flex-shrink:0}
+.pc{display:flex;flex-direction:column;align-items:center;min-width:50px;padding:5px 6px;border-radius:5px;border:1px solid transparent}
+.pc.cheaper{background:rgba(0,229,160,.07);border-color:rgba(0,229,160,.18)}
+.pc-lbl{font-size:8px;color:var(--t3);letter-spacing:.3px}
+.pc-val{font:700 13px/1 var(--mono);color:var(--t1)}
+.pc.cheaper .pc-val{color:var(--green)}
+.na{opacity:.22;font-size:10px}
+/* add to cart button */
+.d-acts{display:flex;gap:5px;flex-shrink:0}
+.atc-btn{padding:7px 12px;font-size:11px;font-weight:600;border-radius:5px;transition:all .14s;
+  background:var(--s3);color:var(--t1);border:1px solid var(--b2);white-space:nowrap;
+  display:flex;align-items:center;gap:5px}
+.atc-btn:hover{background:var(--s4);border-color:var(--b3)}
+.btn-pop{transform:scale(1.1)}
+
+/* ── CART FAB ─────────────── */
+.cart-fab{position:fixed;bottom:22px;right:22px;width:50px;height:50px;background:var(--s3);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;
+  box-shadow:0 6px 18px rgba(0,0,0,.5);cursor:pointer;transition:transform .2s,background .2s;
+  z-index:100;border:1px solid var(--b2)}
+.cart-fab.has{background:var(--zm);border-color:var(--zm)}
+.cart-fab:hover{transform:scale(1.08)}
+.cart-badge{position:absolute;top:-3px;right:-3px;background:var(--t1);color:var(--bg);
+  width:17px;height:17px;border-radius:50%;font:700 10px/1 var(--mono);
+  display:none;align-items:center;justify-content:center}
+
+/* ── CART PANEL ─────────────── */
+.cart-inner{padding:16px;flex:1}
+/* platform section */
+.cart-plat-section{margin-bottom:20px}
+.cart-plat-hdr{display:flex;align-items:center;gap:8px;padding:8px 12px;
+  border-radius:var(--r);margin-bottom:10px;font-size:13px;font-weight:700}
+.cph-sw{background:rgba(255,107,0,.08);border:1px solid rgba(255,107,0,.18);color:var(--sw)}
+.cph-zm{background:rgba(229,39,59,.08);border:1px solid rgba(229,39,59,.18);color:var(--zm)}
+/* restaurant section within platform */
+.cart-rest-section{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+.cart-rest-hdr{padding:10px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
+.crh-name{font-size:13px;font-weight:700}
+.crh-count{font:400 10px/1 var(--mono);color:var(--t3)}
+/* cart item row */
+.ci-row{display:flex;align-items:center;gap:9px;padding:10px 14px;border-bottom:1px solid var(--b1)}
+.ci-row:last-of-type{border-bottom:none}
+.ci-em{font-size:17px;flex-shrink:0}
+.ci-name{flex:1;font-size:13px;min-width:0}
+.ci-qty{font:400 11px/1 var(--mono);color:var(--t3);white-space:nowrap}
+.ci-price{font:700 13px/1 var(--mono);white-space:nowrap}
+.ci-rm{color:var(--t3);font-size:12px;padding:3px;transition:color .12s;flex-shrink:0}
+.ci-rm:hover{color:var(--zm)}
+/* per-dish platform comparison inside cart */
+.ci-compare{display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap}
+.cic-label{font:500 10px/1 var(--mono);color:var(--t3)}
+.cic-sep{font-size:9px;color:var(--t3);opacity:.4}
+.cic-diff{font:700 10px/1 var(--mono)}
+/* restaurant subtotal + order button */
+.cart-rest-footer{padding:12px 14px;background:var(--s2);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.crf-subtotal{font-size:12px;color:var(--t2)}
+.crf-subtotal span{font:700 14px/1 var(--mono);color:var(--t1);margin-left:4px}
+.crf-disc{font-size:11px;color:var(--green);margin-top:2px}
+.order-btn{padding:9px 16px;font:700 13px/1 var(--f);border-radius:6px;cursor:pointer;border:none;transition:filter .14s;white-space:nowrap;flex-shrink:0}
+.order-btn:hover{filter:brightness(1.1)}
+.order-btn:active{transform:scale(.99)}
+.order-btn-sw{background:var(--sw);color:#fff}
+.order-btn-zm{background:var(--zm);color:#fff}
+/* empty cart */
+.cart-empty{text-align:center;padding:56px 20px;color:var(--t3)}
+
+/* ── LIVE / ESTIMATED BADGES ─── */
+.badge-live{display:inline-flex;align-items:center;gap:4px;
+  font:700 9px/1 var(--mono);letter-spacing:.5px;
+  background:rgba(0,229,160,.1);color:var(--green);
+  border:1px solid rgba(0,229,160,.2);padding:2px 7px;border-radius:3px}
+.badge-demo{font:400 9px/1 var(--mono);color:var(--t3);letter-spacing:.3px}
+
+/* ── MENU SKELETON ─────────────── */
+.menu-loading{padding:8px 0}
+.menu-skel{height:60px;background:var(--s1);border-bottom:1px solid var(--b1);
+  animation:pulse 1.4s ease-in-out infinite}
+
+/* ── INSTALL BANNER ─────────────── */
+#install-banner.show{transform:translateY(0)!important;opacity:1!important}
+
+/* ── RESPONSIVE ─────────────── */
+@media(max-width:600px){
+  .home-cards{grid-template-columns:1fr;max-width:340px}
+  .loc-grid{grid-template-columns:1fr}
+  .swap-btn{display:none}
+  .fare-card{grid-template-columns:1fr auto;gap:10px}
+  .book-btn{grid-column:span 2;width:100%}
+  .r-grid{grid-template-columns:1fr}
+  .dish-row{flex-wrap:wrap}
+  .d-prices{width:100%}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo" onclick="goTo('home')">NEX<em>A</em></div>
+  <div class="nav-tabs">
+    <button class="ntab" data-view="travel" onclick="goTo('travel')">🚖 Rides</button>
+    <button class="ntab" data-view="food"   onclick="goTo('food')">🍛 Food</button>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div id="view-home" class="view active">
+  <div class="home-wrap">
+    <h1 class="home-h1">Stop<br>overpaying.</h1>
+    <p class="home-sub">Rides and food delivery compared across all platforms — <strong>instantly.</strong></p>
+    <div class="home-cards">
+      <div class="home-card hc-t" onclick="goTo('travel')">
+        <span class="hc-icon">🚖</span>
+        <p class="hc-tag">Rides</p>
+        <h2 class="hc-title">Travel</h2>
+        <span class="hc-cta">Compare rides →</span>
+      </div>
+      <div class="home-card hc-f" onclick="goTo('food')">
+        <span class="hc-icon">🍛</span>
+        <p class="hc-tag">Food Delivery</p>
+        <h2 class="hc-title">Food</h2>
+        <span class="hc-cta">Compare food →</span>
+      </div>
+    </div>
+    <hr class="home-divider">
+    <div class="home-stats">
+      <div class="hs"><div class="hs-n">7</div><div class="hs-l">Vehicle tiers</div></div>
+      <div class="hs"><div class="hs-n">50+</div><div class="hs-l">Locations</div></div>
+      <div class="hs"><div class="hs-n">33</div><div class="hs-l">Restaurants</div></div>
+      <div class="hs"><div class="hs-n">900+</div><div class="hs-l">Dishes</div></div>
+      <div class="hs"><div class="hs-n">5</div><div class="hs-l">Platforms</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TRAVEL -->
+<div id="view-travel" class="view">
+  <div class="page-wrap">
+    <h1 class="page-h1" style="margin-bottom:18px">Choose your ride</h1>
+
+    <div class="tier-scroll">
+      <div class="tier-row" id="tier-row"></div>
+    </div>
+
+    <div class="search-panel">
+      <div class="loc-grid">
+        <div class="loc-field">
+          <label class="loc-lbl">Pickup</label>
+          <input id="t-pickup" class="loc-inp" placeholder="Gateway, BKC, Andheri…" autocomplete="off">
+          <ul id="t-sug-p" class="sug-list"></ul>
+          <span id="t-pc" class="loc-chip"></span>
+        </div>
+        <button class="swap-btn" id="swap-btn">⇅</button>
+        <div class="loc-field">
+          <label class="loc-lbl">Drop</label>
+          <input id="t-drop" class="loc-inp" placeholder="Powai, Thane, Juhu…" autocomplete="off">
+          <ul id="t-sug-d" class="sug-list"></ul>
+          <span id="t-dc" class="loc-chip"></span>
+        </div>
+      </div>
+      <p class="qr-label">Popular Routes</p>
+      <div class="qr-row" id="qr-row"></div>
+    </div>
+
+    <div id="t-results">
+      <div class="result-meta-row">
+        <div class="result-route" id="t-route"></div>
+        <div class="result-dist"  id="t-dist"></div>
+      </div>
+      <div id="t-fare-wrap"></div>
+      <div id="t-saving" class="saving-bar" style="display:none"></div>
+      <div class="formula-note">
+        <p class="fn-label">Fare formula</p>
+        <div class="fn-grid" id="fn-grid"></div>
+        <p class="fn-disc">* Estimated fares. Actual fare may vary by surge, traffic and platform pricing.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOD -->
+<div id="view-food" class="view">
+  <div class="food-wrap">
+    <h1 class="page-h1 f-h1" style="margin-bottom:14px">Find the <em>cheaper</em> dish.</h1>
+
+    <div class="fs-wrap">
+      <input id="fs-inp" class="fs-input" placeholder="Search dishes, restaurants…" autocomplete="off">
+      <div class="fs-drop" id="fs-drop"></div>
+    </div>
+
+    <div class="food-controls">
+      <div class="plat-tabs">
+        <button class="ptab on" data-p="all">All</button>
+        <button class="ptab" data-p="swiggy">🟠 Swiggy</button>
+        <button class="ptab" data-p="zomato">🔴 Zomato</button>
+      </div>
+    </div>
+
+    <div class="cuis-scroll">
+      <div class="cuis-row" id="cuis-row"></div>
+    </div>
+
+    <div id="r-grid" class="r-grid"></div>
+  </div>
+
+  <button class="cart-fab" id="cart-fab" onclick="openCart()">
+    🛒<span class="cart-badge" id="cart-badge"></span>
+  </button>
+
+  <!-- Menu panel -->
+  <div class="panel" id="menu-panel">
+    <div class="p-nav">
+      <button class="p-back" onclick="closeMenu()">←</button>
+      <div><div class="p-title" id="mp-name"></div><div class="p-sub" id="mp-sub"></div></div>
+      <div class="p-bads-wrap" id="mp-bads"></div>
+    </div>
+    <div class="menu-hint"><span class="mh-green">Green</span> = cheaper platform per dish.</div>
+    <div id="menu-body"></div>
+  </div>
+
+  <!-- Cart panel -->
+  <div class="panel" id="cart-panel">
+    <div class="p-nav">
+      <button class="p-back" onclick="closeCart()">←</button>
+      <span class="p-title">Cart</span>
+      <button onclick="clearCart()" style="margin-left:auto;font-size:11px;color:var(--t3);padding:5px 10px;border:1px solid var(--b1);border-radius:4px;cursor:pointer">Clear all</button>
+    </div>
+    <div class="cart-inner" id="cart-inner"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════
+//  VEHICLE TIERS — research-accurate
+//  Rapido expanded cab service 2024-25
+// ════════════════════════════════════
+const TIERS=[
+  {id:'bike',  name:'Bike',    icon:'🛵', range:'₹25–150', pax:1,
+   platforms:[
+     {name:'Uber Bike',   col:'var(--uber)',   base:20,km:8,  mn:1.0},
+     {name:'Ola Bike',    col:'var(--ola)',    base:20,km:7,  mn:0.75},
+     {name:'Rapido Bike', col:'var(--rapido)', base:20,km:7,  mn:0.75},
+   ]},
+  {id:'auto',  name:'Auto',   icon:'🛺', range:'₹40–220', pax:3,
+   platforms:[
+     {name:'Uber Auto',   col:'var(--uber)',   base:30,km:10, mn:1.0},
+     {name:'Ola Auto',    col:'var(--ola)',    base:28,km:9,  mn:0.9},
+     {name:'Rapido Auto', col:'var(--rapido)', base:25,km:9,  mn:0.85},
+   ]},
+  {id:'mini',  name:'Mini',   icon:'🚗', range:'₹80–400', pax:4,
+   platforms:[
+     {name:'Uber Go',     col:'var(--uber)',   base:50,km:12, mn:1.5},
+     {name:'Ola Mini',    col:'var(--ola)',    base:45,km:11, mn:1.25},
+     {name:'Rapido Cab',  col:'var(--rapido)', base:38,km:10, mn:1.1},
+   ]},
+  {id:'sedan', name:'Sedan',  icon:'🚘', range:'₹120–600', pax:4,
+   platforms:[
+     {name:'Uber Go Sedan',   col:'var(--uber)',   base:55,km:14, mn:1.75},
+     {name:'Ola Prime Sedan', col:'var(--ola)',    base:55,km:13, mn:1.6},
+     {name:'Rapido Cab Plus', col:'var(--rapido)', base:48,km:12, mn:1.4},
+   ]},
+  {id:'prime', name:'Premium',icon:'⭐', range:'₹180–900', pax:4,
+   platforms:[
+     {name:'Uber Premier',   col:'var(--uber)',   base:65,km:16, mn:2.0},
+     {name:'Ola Prime Plus', col:'var(--ola)',    base:65,km:15, mn:1.9},
+     {name:'Rapido Prime',   col:'var(--rapido)', base:55,km:13, mn:1.6},
+   ]},
+  {id:'suv',   name:'SUV',    icon:'🛻', range:'₹250–1200', pax:6,
+   platforms:[
+     {name:'Uber XL',       col:'var(--uber)',   base:80,km:20, mn:2.5},
+     {name:'Ola Prime SUV', col:'var(--ola)',    base:80,km:18, mn:2.3},
+     {name:'Rapido SUV',    col:'var(--rapido)', base:70,km:17, mn:2.1},
+   ]},
+  {id:'luxury',name:'Luxury', icon:'💎', range:'₹400–2500', pax:4,
+   platforms:[
+     {name:'Uber Black', col:'var(--uber)', base:100,km:17,mn:2.0},
+     {name:'Ola Lux',    col:'var(--ola)',  base:120,km:24,mn:3.0},
+   ]},
+];
+let curTier=TIERS[0];
+
+// ════════════════════════════════════
+//  LOCATIONS
+// ════════════════════════════════════
+const LOCS=[
+  {id:1, name:'Gateway of India',area:'Colaba',zone:'South Mumbai',lat:18.922,lng:72.8347},
+  {id:3, name:'CST / CSMT',area:'Fort',zone:'South Mumbai',lat:18.94,lng:72.8353},
+  {id:4, name:'Marine Drive',area:'Marine Lines',zone:'South Mumbai',lat:18.944,lng:72.8227},
+  {id:5, name:'Chowpatty Beach',area:'Girgaon',zone:'South Mumbai',lat:18.9543,lng:72.8146},
+  {id:6, name:'Nariman Point',area:'Nariman Point',zone:'South Mumbai',lat:18.9256,lng:72.8242},
+  {id:9, name:'Crawford Market',area:'Crawford Market',zone:'South Mumbai',lat:18.9483,lng:72.834},
+  {id:12,name:'Haji Ali Dargah',area:'Worli',zone:'South Mumbai',lat:18.9827,lng:72.8089},
+  {id:16,name:'Lower Parel',area:'Lower Parel',zone:'South Mumbai',lat:18.9953,lng:72.8278},
+  {id:17,name:'High Street Phoenix',area:'Lower Parel',zone:'South Mumbai',lat:18.9944,lng:72.8249},
+  {id:18,name:'Siddhivinayak Temple',area:'Prabhadevi',zone:'South Mumbai',lat:19.0166,lng:72.8304},
+  {id:20,name:'Dadar Railway Station',area:'Dadar',zone:'South Mumbai',lat:19.0188,lng:72.8436},
+  {id:22,name:'Churchgate Station',area:'Churchgate',zone:'South Mumbai',lat:18.9317,lng:72.8273},
+  {id:31,name:'Bandra Kurla Complex',area:'BKC',zone:'Western Suburbs',lat:19.0656,lng:72.8646},
+  {id:32,name:'Bandra West Station',area:'Bandra West',zone:'Western Suburbs',lat:19.0543,lng:72.8414},
+  {id:33,name:'Bandra Bandstand',area:'Bandra West',zone:'Western Suburbs',lat:19.0487,lng:72.8197},
+  {id:35,name:'Linking Road',area:'Bandra West',zone:'Western Suburbs',lat:19.0635,lng:72.8354},
+  {id:38,name:'Mumbai T1 Airport',area:'Vile Parle East',zone:'Western Suburbs',lat:19.0886,lng:72.8536},
+  {id:39,name:'Mumbai T2 Airport',area:'Andheri East',zone:'Western Suburbs',lat:19.0974,lng:72.8743},
+  {id:40,name:'Juhu Beach',area:'Juhu',zone:'Western Suburbs',lat:19.0988,lng:72.8267},
+  {id:42,name:'Andheri Railway Station',area:'Andheri West',zone:'Western Suburbs',lat:19.1197,lng:72.8464},
+  {id:44,name:'Lokhandwala Complex',area:'Andheri West',zone:'Western Suburbs',lat:19.1417,lng:72.8257},
+  {id:45,name:'Inorbit Mall Malad',area:'Malad West',zone:'Western Suburbs',lat:19.1742,lng:72.8335},
+  {id:50,name:'Borivali Railway Station',area:'Borivali West',zone:'Western Suburbs',lat:19.2294,lng:72.8569},
+  {id:62,name:'Powai Lake',area:'Powai',zone:'Eastern Suburbs',lat:19.1256,lng:72.9048},
+  {id:63,name:'Hiranandani Powai',area:'Powai',zone:'Eastern Suburbs',lat:19.1186,lng:72.9142},
+  {id:64,name:'IIT Bombay',area:'Powai',zone:'Eastern Suburbs',lat:19.1334,lng:72.9133},
+  {id:71,name:'Thane Railway Station',area:'Thane',zone:'Thane District',lat:19.186,lng:72.9759},
+  {id:72,name:'Viviana Mall',area:'Thane',zone:'Thane District',lat:19.2081,lng:72.9688},
+  {id:81,name:'Vashi Sector 17',area:'Vashi',zone:'Navi Mumbai',lat:19.0732,lng:72.9972},
+  {id:83,name:'DY Patil Stadium',area:'Nerul',zone:'Navi Mumbai',lat:19.0435,lng:73.0259},
+];
+const ROUTES=[
+  {a:3,b:1,km:3.2,mn:12},{a:3,b:31,km:23.1,mn:45},{a:3,b:16,km:9.8,mn:25},{a:3,b:42,km:32,mn:60},
+  {a:31,b:3,km:23.1,mn:45},{a:31,b:40,km:8.5,mn:20},{a:31,b:16,km:7.3,mn:18},{a:31,b:1,km:22.4,mn:42},
+  {a:42,b:3,km:32,mn:60},{a:42,b:31,km:8.3,mn:20},{a:42,b:40,km:2.5,mn:8},{a:42,b:62,km:13,mn:28},
+  {a:50,b:3,km:42,mn:75},{a:50,b:42,km:7.9,mn:18},{a:50,b:31,km:16.5,mn:35},
+  {a:16,b:3,km:9.8,mn:25},{a:16,b:31,km:7.3,mn:18},{a:16,b:42,km:19.5,mn:40},
+  {a:40,b:42,km:2.5,mn:8},{a:40,b:31,km:10.3,mn:24},{a:40,b:3,km:27.8,mn:52},
+  {a:62,b:3,km:19.8,mn:38},{a:62,b:31,km:13.1,mn:28},{a:62,b:42,km:13,mn:28},
+  {a:71,b:3,km:33.5,mn:65},{a:71,b:31,km:20.2,mn:42},
+  {a:81,b:3,km:28.5,mn:55},{a:81,b:31,km:22.3,mn:45},
+  {a:1,b:3,km:3.2,mn:12},{a:1,b:16,km:12.5,mn:28},{a:1,b:42,km:34.5,mn:65},
+  {a:38,b:31,km:7.2,mn:18},{a:39,b:31,km:6.8,mn:16},{a:38,b:3,km:26,mn:48},
+];
+function getRoute(a,b){
+  const r=ROUTES.find(r=>(r.a===a&&r.b===b)||(r.a===b&&r.b===a));
+  if(r)return{km:r.km,mn:r.mn};
+  const p=LOCS.find(l=>l.id===a),d=LOCS.find(l=>l.id===b);
+  if(!p||!d)return null;
+  const R=6371,dlat=(d.lat-p.lat)*Math.PI/180,dlon=(d.lng-p.lng)*Math.PI/180;
+  const aa=Math.sin(dlat/2)**2+Math.cos(p.lat*Math.PI/180)*Math.cos(d.lat*Math.PI/180)*Math.sin(dlon/2)**2;
+  const km=R*2*Math.atan2(Math.sqrt(aa),Math.sqrt(1-aa))*1.3;
+  return{km:Math.round(km*10)/10,mn:Math.round(km*3.5)};
+}
+function calcFare(pl,km,mn){return Math.round(pl.base+km*pl.km+mn*pl.mn);}
+
+// ════════════════════════════════════
+//  RESTAURANTS — 33 total (3 new budget)
+// ════════════════════════════════════
+const RESTS=[
+  {id:1, name:'The Bombay Canteen',    cuisine:'Modern Indian',        area:'Lower Parel',   rating:4.6,p2:1800,sw:1,zm:1,veg:0,clr:'#E8622A'},
+  {id:2, name:'Masque',               cuisine:'Fine Dining',          area:'Mahalaxmi',     rating:4.8,p2:4000,sw:0,zm:1,veg:0,clr:'#2A2A2A'},
+  {id:3, name:'Mahesh Lunch Home',    cuisine:'Mangalorean Seafood',  area:'Fort',          rating:4.5,p2:1600,sw:1,zm:1,veg:0,clr:'#1B6CA8'},
+  {id:4, name:'Swati Snacks',         cuisine:'Gujarati Street Food', area:'Tardeo',        rating:4.7,p2:600, sw:1,zm:0,veg:1,clr:'#F4A62A'},
+  {id:5, name:'Chaitanya',            cuisine:'Malvani Seafood',      area:'Santacruz',     rating:4.4,p2:1200,sw:1,zm:1,veg:0,clr:'#E84040'},
+  {id:6, name:'Masala Library',       cuisine:'Molecular Indian',     area:'BKC',           rating:4.7,p2:3500,sw:0,zm:1,veg:0,clr:'#8B1A1A'},
+  {id:7, name:'Tanjore Tiffin Room',  cuisine:'South Indian',         area:'Matunga',       rating:4.5,p2:900, sw:1,zm:1,veg:0,clr:'#C4772B'},
+  {id:8, name:'Peshawri',             cuisine:'North Indian',         area:'Juhu',          rating:4.6,p2:2800,sw:1,zm:1,veg:0,clr:'#7B4226'},
+  {id:9, name:'Britannia & Co.',      cuisine:'Parsi',                area:'Ballard Estate',rating:4.8,p2:800, sw:1,zm:0,veg:0,clr:'#D4A520'},
+  {id:10,name:'Trishna',              cuisine:'Seafood',              area:'Fort',          rating:4.7,p2:2200,sw:1,zm:1,veg:0,clr:'#1A6B8A'},
+  {id:11,name:'Aaswad',               cuisine:'Maharashtrian',        area:'Dadar',         rating:4.6,p2:400, sw:0,zm:1,veg:1,clr:'#FF6B35'},
+  {id:12,name:'Oh! Calcutta',         cuisine:'Bengali',              area:'Tardeo',        rating:4.5,p2:1600,sw:1,zm:1,veg:0,clr:'#B8860B'},
+  {id:13,name:'Bayroute',             cuisine:'Middle Eastern',       area:'Juhu',          rating:4.6,p2:2200,sw:1,zm:0,veg:0,clr:'#8B6914'},
+  {id:14,name:'Wasabi by Morimoto',   cuisine:'Japanese',             area:'Colaba',        rating:4.8,p2:5500,sw:0,zm:1,veg:0,clr:'#B22222'},
+  {id:15,name:'Cafe Mondegar',        cuisine:'Continental',          area:'Colaba',        rating:4.3,p2:900, sw:1,zm:1,veg:0,clr:'#4682B4'},
+  {id:16,name:'Sardar Pav Bhaji',     cuisine:'Street Food',          area:'Tardeo',        rating:4.7,p2:300, sw:1,zm:0,veg:1,clr:'#FF8C00'},
+  {id:17,name:'O Pedro',              cuisine:'Goan Portuguese',      area:'BKC',           rating:4.6,p2:2400,sw:1,zm:1,veg:0,clr:'#CD853F'},
+  {id:18,name:'Ekaa',                 cuisine:'European Fine Dining', area:'Marine Lines',  rating:4.7,p2:4500,sw:0,zm:1,veg:0,clr:'#556B2F'},
+  {id:19,name:'Jamavar',              cuisine:'North Indian',         area:'Lower Parel',   rating:4.7,p2:3200,sw:1,zm:1,veg:0,clr:'#8B0000'},
+  {id:20,name:'Dakshinayan',          cuisine:'South Indian',         area:'Sion',          rating:4.5,p2:600, sw:1,zm:0,veg:1,clr:'#228B22'},
+  {id:21,name:'Shree Thaker',         cuisine:'Gujarati Thali',       area:'Kalbadevi',     rating:4.6,p2:800, sw:0,zm:1,veg:1,clr:'#DAA520'},
+  {id:22,name:'Leopold Cafe',         cuisine:'Continental',          area:'Colaba',        rating:4.2,p2:1200,sw:1,zm:1,veg:0,clr:'#5B8E5B'},
+  {id:23,name:'Cafe Madras',          cuisine:'South Indian',         area:'Matunga',       rating:4.7,p2:400, sw:1,zm:0,veg:0,clr:'#20B2AA'},
+  {id:24,name:'The Table',            cuisine:'Global Contemporary',  area:'Colaba',        rating:4.6,p2:3800,sw:0,zm:1,veg:0,clr:'#708090'},
+  {id:25,name:'Flurys',               cuisine:'Bakery & Café',        area:'Fort',          rating:4.4,p2:800, sw:1,zm:1,veg:0,clr:'#DEB887'},
+  {id:26,name:'Amar Juice Centre',    cuisine:'Street Food',          area:'Vile Parle',    rating:4.5,p2:400, sw:1,zm:0,veg:1,clr:'#32CD32'},
+  {id:27,name:'Kyani & Co.',          cuisine:'Irani Café',           area:'Dhobi Talao',   rating:4.6,p2:500, sw:0,zm:1,veg:0,clr:'#B8860B'},
+  {id:28,name:'Taftoon',              cuisine:'Awadhi',               area:'Andheri West',  rating:4.5,p2:2600,sw:1,zm:1,veg:0,clr:'#A0522D'},
+  {id:29,name:'Papa Pancho Da Dhaba', cuisine:'Punjabi',              area:'Andheri West',  rating:4.4,p2:1200,sw:1,zm:0,veg:0,clr:'#FF6347'},
+  {id:30,name:'Bastian',              cuisine:'Seafood & Modern',     area:'Bandra West',   rating:4.7,p2:3500,sw:1,zm:1,veg:0,clr:'#4169E1'},
+  // ── 3 new budget restaurants (avg dish price ≤ ₹200) ──
+  {id:31,name:'Mumbai Vada Pav Co.',  cuisine:'Street Food',          area:'Dadar',         rating:4.3,p2:200, sw:1,zm:1,veg:1,clr:'#FF4500'},
+  {id:32,name:'Anand Bhavan',         cuisine:'South Indian',         area:'Matunga',       rating:4.4,p2:300, sw:1,zm:1,veg:1,clr:'#2E8B57'},
+  {id:33,name:'Jimmy\'s Rolls',       cuisine:'Street Food',          area:'Andheri West',  rating:4.2,p2:280, sw:1,zm:0,veg:0,clr:'#DC143C'},
+];
+
+// ════════════════════════════════════
+//  DISHES
+// ════════════════════════════════════
+const DISHES={
+  1:[{id:1,n:'Kejriwal Toast',c:'Small Plates',v:0,e:'🍳',sw:350,zm:380},
+     {id:2,n:'Mandeli Fry',c:'Small Plates',v:0,e:'🐟',sw:280,zm:310},
+     {id:3,n:'Corn Locho',c:'Small Plates',v:1,e:'🌽',sw:250,zm:270},
+     {id:4,n:'Crab Kulcha',c:'Large Plates',v:0,e:'🦀',sw:550,zm:595},
+     {id:5,n:'Malai Kofta',c:'Large Plates',v:1,e:'🍛',sw:450,zm:480},
+     {id:6,n:'Curry Leaf Prawns',c:'Large Plates',v:0,e:'🦐',sw:600,zm:640},
+     {id:7,n:'Pork Vindaloo',c:'Large Plates',v:0,e:'🥘',sw:520,zm:560},
+     {id:8,n:'Coffee Rasgulla',c:'Dessert',v:1,e:'🍮',sw:300,zm:325}],
+  3:[{id:1,n:'Prawn Koliwada',c:'Starters',v:0,e:'🦐',sw:550,zm:590},
+     {id:2,n:'Squid Pepper Fry',c:'Starters',v:0,e:'🦑',sw:480,zm:515},
+     {id:3,n:'Tandoori Pomfret',c:'Starters',v:0,e:'🐠',sw:800,zm:860},
+     {id:4,n:'Mangalorean Fish Curry',c:'Mains',v:0,e:'🍛',sw:550,zm:590},
+     {id:5,n:'Crab Masala',c:'Mains',v:0,e:'🦀',sw:750,zm:800},
+     {id:6,n:'Neer Dosa',c:'Breads',v:1,e:'🫓',sw:80,zm:90},
+     {id:7,n:'Fish Biryani',c:'Rice',v:0,e:'🍚',sw:500,zm:535}],
+  4:[{id:1,n:'Panki Pudina',c:'Snacks',v:1,e:'🌿',sw:200,zm:null},
+     {id:2,n:'Sev Puri',c:'Snacks',v:1,e:'🫙',sw:120,zm:null},
+     {id:3,n:'Dhokla',c:'Snacks',v:1,e:'🟡',sw:150,zm:null},
+     {id:4,n:'Dal Dhokli',c:'Mains',v:1,e:'🍲',sw:240,zm:null},
+     {id:5,n:'Undhiyu',c:'Mains',v:1,e:'🥘',sw:350,zm:null},
+     {id:6,n:'Shrikhand',c:'Dessert',v:1,e:'🍮',sw:180,zm:null}],
+  8:[{id:1,n:'Sikandari Raan',c:'Starters',v:0,e:'🍖',sw:1800,zm:1900},
+     {id:2,n:'Murgh Malai Kebab',c:'Starters',v:0,e:'🍗',sw:650,zm:695},
+     {id:3,n:'Dal Bukhara',c:'Mains',v:1,e:'🫘',sw:600,zm:640},
+     {id:4,n:'Murgh Makhani',c:'Mains',v:0,e:'🍛',sw:750,zm:800},
+     {id:5,n:'Mutton Biryani',c:'Rice',v:0,e:'🍚',sw:900,zm:960},
+     {id:6,n:'Kulfi',c:'Dessert',v:1,e:'🍦',sw:300,zm:320}],
+  9:[{id:1,n:'Mutton Berry Pulao',c:'Mains',v:0,e:'🍚',sw:650,zm:null},
+     {id:2,n:'Sali Boti',c:'Mains',v:0,e:'🥘',sw:500,zm:null},
+     {id:3,n:'Patra Ni Machhi',c:'Mains',v:0,e:'🐟',sw:700,zm:null},
+     {id:4,n:'Bun Maska',c:'Breads',v:1,e:'🍞',sw:80,zm:null},
+     {id:5,n:'Irani Chai',c:'Beverage',v:1,e:'☕',sw:60,zm:null}],
+  10:[{id:1,n:'Butter Garlic Crab',c:'Starters',v:0,e:'🦀',sw:1200,zm:1280},
+      {id:2,n:'Koliwada Prawns',c:'Starters',v:0,e:'🦐',sw:650,zm:695},
+      {id:3,n:'Tandoori Pomfret',c:'Starters',v:0,e:'🐠',sw:950,zm:1015},
+      {id:4,n:'Trishna Fish Curry',c:'Mains',v:0,e:'🍛',sw:650,zm:695},
+      {id:5,n:'Prawn Biryani',c:'Rice',v:0,e:'🍚',sw:750,zm:800}],
+  11:[{id:1,n:'Vada Pav',c:'Snacks',v:1,e:'🫓',sw:null,zm:70},
+      {id:2,n:'Misal Pav',c:'Snacks',v:1,e:'🌶️',sw:null,zm:140},
+      {id:3,n:'Kothimbir Vadi',c:'Snacks',v:1,e:'🟤',sw:null,zm:120},
+      {id:4,n:'Thalipeeth',c:'Snacks',v:1,e:'🫓',sw:null,zm:150},
+      {id:5,n:'Usal Pav',c:'Mains',v:1,e:'🥣',sw:null,zm:130},
+      {id:6,n:'Shrikhand',c:'Dessert',v:1,e:'🍮',sw:null,zm:160},
+      {id:7,n:'Sol Kadhi',c:'Beverage',v:1,e:'🥤',sw:null,zm:80}],
+  16:[{id:1,n:'Amul Butter Pav Bhaji',c:'Mains',v:1,e:'🍛',sw:180,zm:null},
+      {id:2,n:'Cheese Pav Bhaji',c:'Mains',v:1,e:'🧀',sw:220,zm:null},
+      {id:3,n:'Masala Pav',c:'Snacks',v:1,e:'🍞',sw:100,zm:null},
+      {id:4,n:'Tawa Pulao',c:'Rice',v:1,e:'🍚',sw:190,zm:null},
+      {id:5,n:'Paneer Pav Bhaji',c:'Mains',v:1,e:'🍛',sw:230,zm:null},
+      {id:6,n:'Vada Pav',c:'Snacks',v:1,e:'🫓',sw:60,zm:null},
+      {id:7,n:'Sweet Lassi',c:'Beverage',v:1,e:'🥛',sw:100,zm:null}],
+  20:[{id:1,n:'Sada Dosa',c:'Snacks',v:1,e:'🫓',sw:120,zm:null},
+      {id:2,n:'Masala Dosa',c:'Snacks',v:1,e:'🫓',sw:160,zm:null},
+      {id:3,n:'Idli Podi',c:'Snacks',v:1,e:'⚪',sw:110,zm:null},
+      {id:4,n:'Vada',c:'Snacks',v:1,e:'🍩',sw:90,zm:null},
+      {id:5,n:'Bisi Bele Bath',c:'Mains',v:1,e:'🥘',sw:200,zm:null},
+      {id:6,n:'Filter Coffee',c:'Beverage',v:1,e:'☕',sw:90,zm:null},
+      {id:7,n:'Payasam',c:'Dessert',v:1,e:'🍮',sw:160,zm:null}],
+  23:[{id:1,n:'Idli',c:'Snacks',v:1,e:'⚪',sw:80,zm:null},
+      {id:2,n:'Medu Vada',c:'Snacks',v:1,e:'🍩',sw:100,zm:null},
+      {id:3,n:'Masala Dosa',c:'Snacks',v:1,e:'🫓',sw:140,zm:null},
+      {id:4,n:'Rava Dosa',c:'Snacks',v:1,e:'🫓',sw:150,zm:null},
+      {id:5,n:'Pongal',c:'Mains',v:1,e:'🍲',sw:140,zm:null},
+      {id:6,n:'Filter Coffee',c:'Beverage',v:1,e:'☕',sw:80,zm:null}],
+  26:[{id:1,n:'Pav Bhaji',c:'Mains',v:1,e:'🍛',sw:150,zm:null},
+      {id:2,n:'Cheese Pav Bhaji',c:'Mains',v:1,e:'🧀',sw:190,zm:null},
+      {id:3,n:'Mango Shake',c:'Beverage',v:1,e:'🥭',sw:180,zm:null},
+      {id:4,n:'Sitafal Shake',c:'Beverage',v:1,e:'🍈',sw:200,zm:null},
+      {id:5,n:'Vada Pav',c:'Snacks',v:1,e:'🫓',sw:60,zm:null},
+      {id:6,n:'Masala Dosa',c:'Snacks',v:1,e:'🫓',sw:150,zm:null}],
+  30:[{id:1,n:'Spicy Crab Roll',c:'Starters',v:0,e:'🦀',sw:850,zm:910},
+      {id:2,n:'Lobster Mac & Cheese',c:'Starters',v:0,e:'🦞',sw:1400,zm:1480},
+      {id:3,n:'Singapore Chilli Crab',c:'Mains',v:0,e:'🦀',sw:2200,zm:2350},
+      {id:4,n:'Ribeye Steak',c:'Mains',v:0,e:'🥩',sw:2800,zm:2980},
+      {id:5,n:'Truffle Fries',c:'Sides',v:1,e:'🍟',sw:550,zm:590},
+      {id:6,n:'Cheesecake',c:'Dessert',v:1,e:'🍰',sw:750,zm:800}],
+  // Budget restaurant dishes — all ≤ ₹200
+  31:[{id:1,n:'Vada Pav',c:'Snacks',v:1,e:'🫓',sw:40,zm:45},
+      {id:2,n:'Masala Vada Pav',c:'Snacks',v:1,e:'🌶️',sw:55,zm:60},
+      {id:3,n:'Cheese Vada Pav',c:'Snacks',v:1,e:'🧀',sw:70,zm:75},
+      {id:4,n:'Schezwan Vada Pav',c:'Snacks',v:1,e:'🔥',sw:65,zm:70},
+      {id:5,n:'Kanda Bhaji',c:'Snacks',v:1,e:'🧅',sw:80,zm:85},
+      {id:6,n:'Batata Vada',c:'Snacks',v:1,e:'🟡',sw:50,zm:55},
+      {id:7,n:'Chai',c:'Beverage',v:1,e:'☕',sw:30,zm:35}],
+  32:[{id:1,n:'Idli (2 pcs)',c:'Snacks',v:1,e:'⚪',sw:60,zm:65},
+      {id:2,n:'Medu Vada',c:'Snacks',v:1,e:'🍩',sw:70,zm:75},
+      {id:3,n:'Sada Dosa',c:'Snacks',v:1,e:'🫓',sw:90,zm:95},
+      {id:4,n:'Masala Dosa',c:'Snacks',v:1,e:'🫓',sw:120,zm:130},
+      {id:5,n:'Upma',c:'Snacks',v:1,e:'🍲',sw:80,zm:85},
+      {id:6,n:'Sambar Vada',c:'Snacks',v:1,e:'🍩',sw:90,zm:95},
+      {id:7,n:'Filter Coffee',c:'Beverage',v:1,e:'☕',sw:50,zm:55},
+      {id:8,n:'Thali (mini)',c:'Mains',v:1,e:'🍽️',sw:180,zm:195}],
+  33:[{id:1,n:'Chicken Frankie',c:'Rolls',v:0,e:'🌯',sw:120,zm:null},
+      {id:2,n:'Paneer Frankie',c:'Rolls',v:1,e:'🌯',sw:100,zm:null},
+      {id:3,n:'Egg Frankie',c:'Rolls',v:0,e:'🌯',sw:90,zm:null},
+      {id:4,n:'Mutton Frankie',c:'Rolls',v:0,e:'🌯',sw:140,zm:null},
+      {id:5,n:'Double Chicken Frankie',c:'Rolls',v:0,e:'🌯',sw:160,zm:null},
+      {id:6,n:'Cheese Frankie',c:'Rolls',v:1,e:'🌯',sw:130,zm:null},
+      {id:7,n:'Cold Drink',c:'Beverage',v:1,e:'🥤',sw:40,zm:null}],
+};
+// Fill remaining with representative dishes
+RESTS.forEach(r=>{
+  if(!DISHES[r.id]){
+    const b=r.p2;
+    DISHES[r.id]=[
+      {id:1,n:'Signature Starter', c:'Starters',v:0,e:'🍽️',sw:r.sw?Math.round(b*.14):null,zm:r.zm?Math.round(b*.14)+25:null},
+      {id:2,n:"Chef's Special",    c:'Mains',   v:0,e:'🍛', sw:r.sw?Math.round(b*.24):null,zm:r.zm?Math.round(b*.24)+35:null},
+      {id:3,n:'Vegetarian Option', c:'Mains',   v:1,e:'🥬', sw:r.sw?Math.round(b*.18):null,zm:r.zm?Math.round(b*.18)+25:null},
+      {id:4,n:'House Bread',       c:'Breads',  v:1,e:'🫓', sw:r.sw?75:null,zm:r.zm?85:null},
+      {id:5,n:'Sweet Ending',      c:'Dessert', v:1,e:'🍮', sw:r.sw?180:null,zm:r.zm?200:null},
+      {id:6,n:'House Drink',       c:'Beverage',v:1,e:'🍹', sw:r.sw?140:null,zm:r.zm?155:null},
+    ];
+  }
+});
+
+// Compute average dish price for each restaurant (for budget filter)
+function avgDishPrice(rid){
+  const d=DISHES[rid]||[];
+  if(!d.length)return Infinity;
+  const prices=d.map(x=>x.sw||x.zm||0).filter(p=>p>0);
+  if(!prices.length)return Infinity;
+  return prices.reduce((s,p)=>s+p,0)/prices.length;
+}
+
+// ════════════════════════════════════
+//  DISCOUNTS
+// ════════════════════════════════════
+const DISC={
+  sw:[{min:1000,type:'pct',val:30,cap:250,lbl:'30% off above ₹1000 (max ₹250)'},
+      {min:400, type:'pct',val:20,cap:100,lbl:'20% off above ₹400 (max ₹100)'}],
+  zm:[{min:1200,type:'pct',val:40,cap:300,lbl:'Pro+ 40% off above ₹1200 (max ₹300)'},
+      {min:500, type:'pct',val:25,cap:120,lbl:'25% off above ₹500 (max ₹120)'},
+      {min:499, type:'flat',val:100,cap:100,lbl:'₹100 flat off above ₹499'}]
+};
+function bestDisc(p,sub){
+  const t=DISC[p].find(t=>sub>=t.min);
+  if(!t)return{disc:0,lbl:'No discount applicable',final:sub};
+  const d=t.type==='pct'?Math.min(sub*t.val/100,t.cap):t.val;
+  return{disc:Math.round(d),lbl:t.lbl,final:sub-Math.round(d)};
+}
+
+// ════════════════════════════════════
+//  CUISINE CATEGORIES
+// ════════════════════════════════════
+const CUISINES=[
+  {id:'all',    name:'All',           icon:'✦',match:null},
+  {id:'north',  name:'North Indian',  icon:'🫓',match:['North Indian','Awadhi','Punjabi']},
+  {id:'south',  name:'South Indian',  icon:'🥥',match:['South Indian','Tamilian']},
+  {id:'seafood',name:'Seafood',       icon:'🦀',match:['Seafood','Mangalorean Seafood','Malvani Seafood','Goan Portuguese','Seafood & Modern']},
+  {id:'street', name:'Street Food',   icon:'🌮',match:['Street Food','Gujarati Street Food','Maharashtrian']},
+  {id:'world',  name:'World',         icon:'🍕',match:['Continental','Bakery & Café','European Fine Dining','Global Contemporary','Middle Eastern','Japanese','Irani Café','Parsi']},
+  {id:'fine',   name:'Fine Dining',   icon:'✨',match:['Fine Dining','Molecular Indian']},
+  {id:'veg',    name:'Pure Veg',      icon:'🌿',match:'VEG'},
+  // Budget: avg dish price <= ₹200
+  {id:'budget', name:'Budget',        icon:'💸',match:'BUDGET'},
+];
+function matchCuisine(r,cid){
+  const c=CUISINES.find(x=>x.id===cid);
+  if(!c||!c.match)return true;
+  if(c.match==='VEG')return r.veg===1;
+  if(c.match==='BUDGET')return avgDishPrice(r.id)<=200;
+  return c.match.some(m=>r.cuisine.toLowerCase().includes(m.toLowerCase()));
+}
+
+// Restaurant image
+const IMG_MAP={
+  'Modern Indian':'indian+restaurant+food','Fine Dining':'fine+dining+restaurant',
+  'Mangalorean Seafood':'seafood+coastal+india','Seafood':'seafood+restaurant',
+  'Gujarati Street Food':'gujarati+food','Street Food':'mumbai+street+food',
+  'Malvani Seafood':'coastal+maharashtrian','Maharashtrian':'maharashtrian+thali',
+  'Molecular Indian':'molecular+gastronomy+plating','South Indian':'dosa+south+indian',
+  'North Indian':'tandoori+north+indian','Punjabi':'punjabi+dhaba','Parsi':'parsi+irani+cafe',
+  'Irani Café':'irani+cafe+mumbai','Bengali':'bengali+fish+curry',
+  'Middle Eastern':'middle+eastern+restaurant','Japanese':'japanese+sushi',
+  'Continental':'european+cafe','Goan Portuguese':'goan+food+seafood',
+  'European Fine Dining':'modern+european+restaurant','Awadhi':'awadhi+biryani',
+  'Gujarati Thali':'gujarati+thali','Global Contemporary':'modern+restaurant',
+  'Bakery & Café':'bakery+pastry','Seafood & Modern':'modern+seafood',
+};
+function restImg(r){const q=IMG_MAP[r.cuisine]||'restaurant+food+india';return`https://source.unsplash.com/400x240/?${q}&sig=${r.id*7}`;}
+function dishFb(c){if(c.includes('Seafood')||c.includes('Goan'))return'🦀';if(c.includes('South')||c.includes('Tamilian'))return'🥥';if(c.includes('North')||c.includes('Punjabi')||c.includes('Awadhi'))return'🍛';if(c.includes('Street'))return'🌮';if(c.includes('Bakery'))return'🎂';if(c.includes('Japanese'))return'🍣';return'🍽️';}
+
+// ════════════════════════════════════
+//  UNIT TESTS
+// ════════════════════════════════════
+function _runTests(){
+  const assert=(ok,msg)=>console[ok?'log':'error']((ok?'PASS':'FAIL')+': '+msg);
+  let r=bestDisc('sw',1000);assert(r.disc===250,'Swiggy 1000→250');assert(r.final===750,'Swiggy 1000 final 750');
+  r=bestDisc('sw',400);assert(r.disc===80,'Swiggy 400→80');
+  r=bestDisc('zm',500);assert(r.disc===120,'Zomato 500→120');
+  r=bestDisc('sw',100);assert(r.disc===0,'Swiggy 100→no disc');
+  // budget filter
+  assert(avgDishPrice(31)<=200,'R31 Mumbai Vada Pav Co. is budget');
+  assert(avgDishPrice(32)<=200,'R32 Anand Bhavan is budget');
+  assert(avgDishPrice(33)<=200,'R33 Jimmys Rolls is budget');
+  assert(avgDishPrice(11)<=200,'R11 Aaswad is budget');
+  assert(avgDishPrice(16)<=200,'R16 Sardar is budget');
+  assert(avgDishPrice(20)<=200,'R20 Dakshinayan is budget');
+  assert(avgDishPrice(23)<=200,'R23 Cafe Madras is budget');
+  assert(avgDishPrice(26)<=200,'R26 Amar Juice is budget');
+  console.log('Tests done. Run window._runTests() anytime.');
+}
+window._runTests=_runTests;
+
+// ════════════════════════════════════
+//  API SERVICE LAYER
+//  Tries real backend first, falls back
+//  to local demo data gracefully.
+//  Set API_BASE to your deployed FastAPI
+//  URL once the backend is live.
+//  e.g. 'https://api.nexaapp.in'
+// ════════════════════════════════════
+const API_BASE = 'http://localhost:8000';   // ← your local server; change to Render URL when deployed
+let dataSource = 'demo';  // 'live' | 'demo'
+let lastFetched = null;
+
+const DataService = {
+  async getRestaurants(params={}) {
+    if (!API_BASE) return { data: RESTS, source: 'demo' };
+    try {
+      const qs = new URLSearchParams(params).toString();
+      const res = await fetch(`${API_BASE}/api/restaurants${qs ? '?'+qs : ''}`,
+        { signal: AbortSignal.timeout(4000) });
+      if (!res.ok) throw new Error('non-2xx');
+      const data = await res.json();
+      dataSource = 'live';
+      lastFetched = new Date();
+      return { data: data.restaurants, source: 'live' };
+    } catch(e) {
+      console.warn('API unavailable, using demo data:', e.message);
+      return { data: RESTS, source: 'demo' };
+    }
+  },
+
+  async getMenu(restaurantId) {
+    if (!API_BASE) return { data: DISHES[restaurantId] || [], source: 'demo' };
+    try {
+      const res = await fetch(`${API_BASE}/api/restaurants/${restaurantId}/menu`,
+        { signal: AbortSignal.timeout(4000) });
+      if (!res.ok) throw new Error('non-2xx');
+      const data = await res.json();
+      dataSource = 'live';
+      lastFetched = new Date();
+      return { data: data.dishes, source: 'live', updatedAt: data.updated_at };
+    } catch(e) {
+      return { data: DISHES[restaurantId] || [], source: 'demo', updatedAt: null };
+    }
+  },
+
+  async getRideFare(pickupId, dropId, tierId) {
+    if (!API_BASE) return null;  // falls through to formula-based estimate
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/rides/estimate?pickup=${pickupId}&drop=${dropId}&tier=${tierId}`,
+        { signal: AbortSignal.timeout(3000) });
+      if (!res.ok) throw new Error('non-2xx');
+      return await res.json();
+    } catch(e) {
+      return null;  // caller uses formula fallback
+    }
+  },
+
+  // User-reported price confirmation (crowdsourced accuracy)
+  async confirmPrice(restaurantId, dishId, platform, actualPrice) {
+    if (!API_BASE) return;
+    try {
+      await fetch(`${API_BASE}/api/prices/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ restaurant_id: restaurantId, dish_id: dishId,
+          platform, actual_price: actualPrice, reported_at: new Date().toISOString() }),
+        signal: AbortSignal.timeout(3000)
+      });
+    } catch(e) { /* silent — confirmation is best-effort */ }
+  }
+};
+
+function getSourceBadge(source) {
+  if (source === 'live') {
+    const mins = lastFetched ? Math.round((Date.now()-lastFetched)/60000) : 0;
+    return `<span class="badge-live">● Live${mins > 0 ? ' · '+mins+'m ago' : ''}</span>`;
+  }
+  return `<span class="badge-demo">Estimated</span>`;
+}
+
+// ════════════════════════════════════
+//  URL ROUTING
+//  Supports ?view=travel or ?view=food
+//  Used by Android deep links:
+//  nexa://app/travel  →  ?view=travel
+//  nexa://app/food    →  ?view=food
+// ════════════════════════════════════
+function getInitialView() {
+  const params = new URLSearchParams(window.location.search);
+  const v = params.get('view');
+  return ['travel','food'].includes(v) ? v : 'home';
+}
+function setURLView(v) {
+  const url = v === 'home' ? window.location.pathname
+    : `${window.location.pathname}?view=${v}`;
+  history.pushState({view: v}, '', url);
+}
+
+// ════════════════════════════════════
+//  PWA INSTALL PROMPT
+// ════════════════════════════════════
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Show install banner after user has been on the app 30s
+  setTimeout(() => {
+    if (deferredInstallPrompt) showInstallBanner();
+  }, 30000);
+});
+function showInstallBanner() {
+  const banner = document.getElementById('install-banner');
+  if (banner) banner.classList.add('show');
+}
+function installApp() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(() => {
+    deferredInstallPrompt = null;
+    const b = document.getElementById('install-banner');
+    if (b) b.remove();
+  });
+}
+
+// ════════════════════════════════════
+//  STATE
+// ════════════════════════════════════
+let tPid=null,tDid=null,fPlat='all',fCuisine='all';
+const cart={};   // key: `${rid}_${did}_${plat}`  val: {d, rid, plat, qty}
+
+// ════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════
+function goTo(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.toggle('on',t.dataset.view===v));
+  window.scrollTo(0,0);
+  setURLView(v);
+  if(v==='food'){renderGrid();updateBadge();}
+}
+
+
+// ════════════════════════════════════
+//  TRAVEL
+// ════════════════════════════════════
+function initTiers(){
+  const row=document.getElementById('tier-row');
+  TIERS.forEach(t=>{
+    const btn=document.createElement('button');
+    btn.className='tier-pill'+(t.id===curTier.id?' on':'');
+    btn.dataset.tid=t.id;
+    const platNames=t.platforms.map(p=>p.name.split(' ')[0]).join(' · ');
+    btn.innerHTML=`<span class="tp-icon">${t.icon}</span><span class="tp-name">${t.name}</span>`;
+    btn.onclick=()=>{
+      curTier=t;
+      document.querySelectorAll('.tier-pill').forEach(p=>p.classList.toggle('on',p.dataset.tid===t.id));
+      if(tPid&&tDid)compareRides();
+    };
+    row.appendChild(btn);
+  });
+}
+function initQR(){
+  const row=document.getElementById('qr-row');
+  [{l:'CST → BKC',a:3,b:31},{l:'BKC → Juhu',a:31,b:40},{l:'Andheri → BKC',a:42,b:31},
+   {l:'Borivali → CST',a:50,b:3},{l:'Powai → CST',a:62,b:3},{l:'T2 → BKC',a:39,b:31},
+   {l:'Gateway → Andheri',a:1,b:42},{l:'Thane → BKC',a:71,b:31}].forEach(q=>{
+    const btn=document.createElement('button');
+    btn.className='qr-btn';btn.textContent=q.l;
+    btn.onclick=()=>{
+      const p=LOCS.find(l=>l.id===q.a),d=LOCS.find(l=>l.id===q.b);if(!p||!d)return;
+      tPid=q.a;tDid=q.b;
+      setField('t-pickup','t-sug-p','t-pc',p.name,p.area);
+      setField('t-drop','t-sug-d','t-dc',d.name,d.area);
+      compareRides();
+    };
+    row.appendChild(btn);
+  });
+}
+function setField(inputId,sugId,chipId,name,area){
+  document.getElementById(inputId).value=name;
+  document.getElementById(sugId).classList.remove('open');
+  const c=document.getElementById(chipId);c.textContent=area;c.style.display='block';
+}
+function showSug(q,sugId,fp){
+  const el=document.getElementById(sugId);
+  const res=LOCS.filter(l=>l.name.toLowerCase().includes(q.toLowerCase())||l.area.toLowerCase().includes(q.toLowerCase())).slice(0,8);
+  el.innerHTML='';
+  if(!res.length){el.classList.remove('open');return;}
+  res.forEach(l=>{
+    const li=document.createElement('li');li.className='sug-item';
+    li.innerHTML=`<span class="si-pin">📍</span><div><div class="si-name">${l.name}</div><div class="si-area">${l.area} · ${l.zone}</div></div>`;
+    li.onclick=()=>{
+      if(fp){tPid=l.id;setField('t-pickup',sugId,'t-pc',l.name,l.area);}
+      else{tDid=l.id;setField('t-drop',sugId,'t-dc',l.name,l.area);}
+      if(tPid&&tDid)compareRides();
+    };
+    el.appendChild(li);
+  });
+  el.classList.add('open');
+}
+function compareRides(){
+  if(!tPid||!tDid||tPid===tDid)return;
+  const p=LOCS.find(l=>l.id===tPid),d=LOCS.find(l=>l.id===tDid);
+  const route=getRoute(tPid,tDid);
+  const res=document.getElementById('t-results');
+  res.className='show';
+  document.getElementById('t-route').innerHTML=`<span class="r-loc">${p.name}</span><span class="r-arr">→</span><span class="r-loc">${d.name}</span>`;
+  document.getElementById('t-dist').textContent=route?`${route.km} km · ~${route.mn} min`:'Estimated route';
+  if(!route){
+    document.getElementById('t-fare-wrap').innerHTML=`<div class="no-route">No pre-computed route for this pair. Try a popular route from the shortcuts above.</div>`;
+    document.getElementById('t-saving').style.display='none';
+    return;
+  }
+  const wrap=document.getElementById('t-fare-wrap');
+  wrap.innerHTML=`<div class="skel-wrap">${curTier.platforms.map(()=>'<div class="skel-card"></div>').join('')}</div>`;
+  setTimeout(()=>{
+    const fares=curTier.platforms.map(pl=>({...pl,fare:calcFare(pl,route.km,route.mn)})).sort((a,b)=>a.fare-b.fare);
+    wrap.innerHTML='<div class="fare-cards" id="fare-inner"></div>';
+    const fc=document.getElementById('fare-inner');
+    fares.forEach((pl,i)=>{
+      const best=i===0;
+      const card=document.createElement('div');
+      card.className='fare-card'+(best?' cheapest':'');
+      card.style.transitionDelay=`${i*70}ms`;
+      card.innerHTML=`<div class="fc-left">
+        <span class="fc-icon">${curTier.icon}</span>
+        <div><div class="fc-name" style="color:${pl.col}">${pl.name}${best?'<span class="cheap-pill">CHEAPEST</span>':''}</div></div>
+      </div>
+      <div class="fc-price">₹${pl.fare}</div>
+      <button class="book-btn${best?' go':''}" onclick="bookRide('${pl.name}',${tPid},${tDid})">Book</button>`;
+      fc.appendChild(card);
+      requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'),i*70));
+    });
+    const max=Math.max(...fares.map(f=>f.fare)),min=fares[0].fare,saved=max-min;
+    const sb=document.getElementById('t-saving');
+    if(saved>0){sb.style.display='block';sb.innerHTML=`Choosing <strong style="color:${fares[0].col}">${fares[0].name}</strong> saves you <strong>₹${saved}</strong> on this route.`;}
+    else{sb.style.display='none';}
+    // formula
+    const fg=document.getElementById('fn-grid');fg.innerHTML='';
+    curTier.platforms.forEach(pl=>{
+      const d=document.createElement('div');d.className='fn-item';
+      d.innerHTML=`<div class="fn-plat" style="color:${pl.col}">${pl.name}</div><div class="fn-formula">₹${pl.base} base\n+ ₹${pl.km}/km\n+ ₹${pl.mn}/min</div>`;
+      fg.appendChild(d);
+    });
+  },600);
+}
+function bookRide(name,pid,did){
+  const p=LOCS.find(l=>l.id===pid),d=LOCS.find(l=>l.id===did);if(!p||!d)return;
+  const base=name.split(' ')[0].toLowerCase();
+  const urls={uber:'https://m.uber.com/looking/',ola:'olacabs://',rapido:'https://rapido.bike/'};
+  const url=urls[base]||'https://play.google.com/store';
+  if(typeof window.Android!=='undefined'){try{window.Android.openAppIntent(base,url,p.lat,p.lng,d.lat,d.lng);}catch(e){}}
+  else window.open(url,'_blank');
+}
+
+// ════════════════════════════════════
+//  FOOD — GRID
+// ════════════════════════════════════
+function renderGrid(){
+  let list=RESTS;
+  if(fPlat==='swiggy')list=list.filter(r=>r.sw);
+  if(fPlat==='zomato')list=list.filter(r=>r.zm);
+  if(fCuisine!=='all')list=list.filter(r=>matchCuisine(r,fCuisine));
+  const q=(document.getElementById('fs-inp')||{}).value||'';
+  if(q)list=list.filter(r=>r.name.toLowerCase().includes(q.toLowerCase())||r.cuisine.toLowerCase().includes(q.toLowerCase()));
+  const grid=document.getElementById('r-grid');grid.innerHTML='';
+  if(!list.length){
+    grid.innerHTML=`<div class="st-empty"><div class="st-icon">🍽️</div><div class="st-msg">No restaurants match</div><div class="st-hint">Try a different filter</div></div>`;
+    return;
+  }
+  list.forEach((r,i)=>{
+    const card=document.createElement('div');card.className='r-card';card.style.setProperty('--i',i);
+    const bads=[r.sw?`<span class="rpb rpb-sw">SW</span>`:'',r.zm?`<span class="rpb rpb-zm">ZM</span>`:''].join('');
+    card.innerHTML=`<div class="r-img-box">
+  <img class="r-img" src="${restImg(r)}" alt="${r.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+  <div class="r-img-fb" style="display:none">${dishFb(r.cuisine)}</div>
+  <div class="r-img-ov"></div>
+  <div class="r-img-rat">★ ${r.rating}</div>
+  <div class="r-plat-bads">${bads}</div>
+</div>
+<div class="r-body">
+  <div class="r-name">${r.name}</div>
+  <div class="r-cuisine">${r.cuisine}</div>
+  <div class="r-footer"><span class="r-area">📍 ${r.area}</span><span class="r-price">₹${r.p2} for two</span></div>
+  ${r.veg?'<div class="r-veg">🌿 Pure Veg</div>':''}
+</div>`;
+    card.onclick=()=>openMenu(r.id);
+    grid.appendChild(card);
+  });
+}
+
+function initFoodSearch(){
+  const inp=document.getElementById('fs-inp');
+  const drop=document.getElementById('fs-drop');
+  inp.addEventListener('input',e=>{
+    renderGrid();
+    const q=e.target.value.trim();
+    if(q.length<2){drop.classList.remove('open');return;}
+    const rM=RESTS.filter(r=>r.name.toLowerCase().includes(q.toLowerCase())||r.cuisine.toLowerCase().includes(q.toLowerCase())).slice(0,5);
+    const dM=[];RESTS.forEach(r=>(DISHES[r.id]||[]).forEach(d=>{if(d.n.toLowerCase().includes(q.toLowerCase()))dM.push({d,r});}));
+    if(!rM.length&&!dM.length){drop.classList.remove('open');return;}
+    let html='';
+    if(rM.length){
+      html+=`<p class="fd-sec-lbl">Restaurants</p>`;
+      rM.forEach(r=>{
+        const b=[r.sw?`<span class="rpb rpb-sw" style="font-size:8px;padding:1px 4px">SW</span>`:'',r.zm?`<span class="rpb rpb-zm" style="font-size:8px;padding:1px 4px">ZM</span>`:''].join('');
+        html+=`<div class="fd-item" onclick="drop.classList.remove('open');openMenu(${r.id})">
+  <img class="fd-thumb" src="${restImg(r)}" onerror="this.textContent='${dishFb(r.cuisine)}'">
+  <div><div class="fd-name">${r.name}</div><div class="fd-sub">${r.cuisine} · ${r.area} ${b}</div></div>
+</div>`;
+      });
+    }
+    if(dM.length){
+      html+=`<div style="border-top:1px solid var(--b1)"></div><p class="fd-sec-lbl">Dishes</p>`;
+      dM.slice(0,5).forEach(({d,r})=>{
+        const mn=d.sw&&d.zm?Math.min(d.sw,d.zm):d.sw||d.zm;
+        html+=`<div class="fd-item" onclick="drop.classList.remove('open');openMenu(${r.id})">
+  <div class="fd-thumb">${d.e}</div>
+  <div><div class="fd-name">${d.n}</div><div class="fd-sub">${r.name}</div></div>
+  <div class="fd-price">from ₹${mn}</div>
+</div>`;
+      });
+    }
+    drop.innerHTML=html;drop.classList.add('open');
+  });
+  document.addEventListener('click',e=>{if(!e.target.closest('.fs-wrap'))drop.classList.remove('open');});
+}
+function initCuisineChips(){
+  const row=document.getElementById('cuis-row');
+  CUISINES.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='cuis-chip'+(c.id==='all'?' on':'');btn.dataset.cid=c.id;
+    btn.innerHTML=`<span class="cuis-icon">${c.icon}</span><span class="cuis-name">${c.name}</span>`;
+    btn.onclick=()=>{
+      fCuisine=c.id;
+      document.querySelectorAll('.cuis-chip').forEach(x=>x.classList.toggle('on',x.dataset.cid===c.id));
+      renderGrid();
+    };
+    row.appendChild(btn);
+  });
+}
+
+// ════════════════════════════════════
+//  FOOD — MENU
+// ════════════════════════════════════
+async function openMenu(rid){
+  const r=RESTS.find(x=>x.id===rid);if(!r)return;
+  document.getElementById('mp-name').textContent=r.name;
+  document.getElementById('mp-sub').textContent=`${r.cuisine} · ${r.area}`;
+  document.getElementById('mp-bads').innerHTML=[
+    r.sw?`<span class="rpb rpb-sw">Swiggy</span>`:'',
+    r.zm?`<span class="rpb rpb-zm">Zomato</span>`:''
+  ].join(' ');
+  // Show skeleton while fetching
+  document.getElementById('menu-body').innerHTML=`<div class="menu-loading">${[1,2,3,4,5].map(()=>'<div class="menu-skel"></div>').join('')}</div>`;
+  document.getElementById('menu-panel').classList.add('open');
+
+  const {data: dishes, source, updatedAt} = await DataService.getMenu(rid);
+
+  // Update hint bar with data source
+  const hint = document.querySelector('.menu-hint');
+  if(hint){
+    const badge = getSourceBadge(source);
+    const ts = updatedAt ? ` · ${new Date(updatedAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}` : '';
+    hint.innerHTML = `<span class="mh-green">Green</span> = cheaper platform per dish. ${badge}${ts}`;
+  }
+
+  const grouped={};dishes.forEach(d=>{if(!grouped[d.c])grouped[d.c]=[];grouped[d.c].push(d);});
+  let html='';
+  if(!dishes.length){
+    html=`<div class="st-empty"><div class="st-icon">🍽️</div><div class="st-msg">No dishes found</div></div>`;
+  } else {
+    Object.entries(grouped).forEach(([cat,items])=>{
+      html+=`<div class="menu-cat-hdr">${cat}</div>`;
+      items.forEach(d=>{
+        const ch=d.sw&&d.zm?(d.sw<d.zm?'sw':d.zm<d.sw?'zm':'eq'):'n';
+        const autoplat=(d.sw&&d.zm)?(d.sw<=d.zm?'sw':'zm'):(d.sw?'sw':'zm');
+        const cartBtn=`<button class="atc-btn" onclick="addCart(${rid},${d.id},'${autoplat}',this)">🛒 Add</button>`;
+        html+=`<div class="dish-row">
+<span class="d-em">${d.e||'🍽️'}</span>
+<div class="d-info"><div class="d-name">${d.v?'🌿':'🔴'} ${d.n}</div><div class="d-cat">${d.c}</div></div>
+<div class="d-prices">
+  <div class="pc${ch==='sw'?' cheaper':''}"><span class="pc-lbl">Swiggy</span><span class="pc-val">${d.sw?'₹'+d.sw:'<span class="na">—</span>'}</span></div>
+  <div class="pc${ch==='zm'?' cheaper':''}"><span class="pc-lbl">Zomato</span><span class="pc-val">${d.zm?'₹'+d.zm:'<span class="na">—</span>'}</span></div>
+</div>
+<div class="d-acts">${cartBtn}</div>
+</div>`;
+      });
+    });
+  }
+  document.getElementById('menu-body').innerHTML=html;
+}
+function closeMenu(){document.getElementById('menu-panel').classList.remove('open');}
+
+// ════════════════════════════════════
+//  CART — per-platform, per-restaurant
+// ════════════════════════════════════
+function addCart(rid,did,plat,btn){
+  const k=`${rid}_${did}_${plat}`;
+  const d=(DISHES[rid]||[]).find(x=>x.id===did);if(!d)return;
+  if(!cart[k])cart[k]={d,rid,plat,qty:0};
+  cart[k].qty++;
+  updateBadge();
+  btn.classList.add('btn-pop');setTimeout(()=>btn.classList.remove('btn-pop'),240);
+}
+function removeCart(k){if(cart[k]){cart[k].qty--;if(cart[k].qty<=0)delete cart[k];}renderCart();}
+function clearCart(){Object.keys(cart).forEach(k=>delete cart[k]);renderCart();updateBadge();}
+function updateBadge(){
+  const n=Object.values(cart).reduce((s,v)=>s+v.qty,0);
+  const b=document.getElementById('cart-badge');b.textContent=n;b.style.display=n>0?'flex':'none';
+  document.getElementById('cart-fab').classList.toggle('has',n>0);
+}
+function openCart(){closeMenu();renderCart();document.getElementById('cart-panel').classList.add('open');}
+function closeCart(){document.getElementById('cart-panel').classList.remove('open');}
+
+function renderCart(){
+  const inner=document.getElementById('cart-inner');
+  const items=Object.entries(cart).filter(([,v])=>v.qty>0);
+  if(!items.length){
+    inner.innerHTML=`<div class="cart-empty"><div style="font-size:36px;margin-bottom:10px">🛒</div><p style="font-size:14px;color:var(--t2)">Cart is empty</p><p style="font-size:12px;color:var(--t3);margin-top:4px">Add dishes from any restaurant menu</p></div>`;
+    return;
+  }
+
+  // Group: { sw: { rid: [items] }, zm: { rid: [items] } }
+  const grouped={sw:{},zm:{}};
+  items.forEach(([k,v])=>{
+    const p=v.plat;
+    if(!grouped[p][v.rid])grouped[p][v.rid]=[];
+    grouped[p][v.rid].push([k,v]);
+  });
+
+  let html='';
+  ['sw','zm'].forEach(plat=>{
+    const restIds=Object.keys(grouped[plat]);
+    if(!restIds.length)return;
+
+    const platLabel=plat==='sw'?'🟠 Swiggy':'🔴 Zomato';
+    const platClass=plat==='sw'?'cph-sw':'cph-zm';
+    html+=`<div class="cart-plat-section">
+<div class="cart-plat-hdr ${platClass}">${platLabel}</div>`;
+
+    restIds.forEach(rid=>{
+      const r=RESTS.find(x=>x.id===parseInt(rid));
+      const rItems=grouped[plat][rid];
+      const sub=rItems.reduce((s,[,v])=>{const p=(v.plat==='sw'?v.d.sw:v.d.zm)||0;return s+p*v.qty;},0);
+      const dis=bestDisc(plat,sub);
+      const totalCount=rItems.reduce((s,[,v])=>s+v.qty,0);
+
+      html+=`<div class="cart-rest-section">
+<div class="cart-rest-hdr">
+  <span class="crh-name">${r?r.name:'Restaurant'}</span>
+  <span class="crh-count">${totalCount} item${totalCount>1?'s':''}</span>
+</div>`;
+
+      // Dish rows — each shows the item + a per-dish platform comparison
+      rItems.forEach(([k,v])=>{
+        const thisPlatPrice=(v.plat==='sw'?v.d.sw:v.d.zm)||0;
+        const otherPlatPrice=(v.plat==='sw'?v.d.zm:v.d.sw)||null;
+        const otherPlatLabel=v.plat==='sw'?'Zomato':'Swiggy';
+        // Comparison: show both platform unit prices if dish exists on both
+        let compareHtml='';
+        if(otherPlatPrice){
+          const diff=thisPlatPrice-otherPlatPrice;
+          const sign=diff>0?`+₹${diff}`:(diff<0?`-₹${Math.abs(diff)}`:'same');
+          const signColor=diff>0?'var(--red)':(diff<0?'var(--green)':'var(--t3)');
+          compareHtml=`<div class="ci-compare">
+  <span class="cic-label">${plat==='sw'?'🟠':'🔴'} ₹${thisPlatPrice}</span>
+  <span class="cic-sep">vs</span>
+  <span class="cic-label">${plat==='sw'?'🔴':'🟠'} ₹${otherPlatPrice}</span>
+  <span class="cic-diff" style="color:${signColor}">${sign} here</span>
+</div>`;
+        }
+        html+=`<div class="ci-row">
+  <span class="ci-em">${v.d.e}</span>
+  <div class="ci-name">
+    <div>${v.d.n}</div>
+    ${compareHtml}
+  </div>
+  <span class="ci-qty">×${v.qty}</span>
+  <span class="ci-price">₹${thisPlatPrice*v.qty}</span>
+  <button class="ci-rm" onclick="removeCart('${k}')">✕</button>
+</div>`;
+      });
+
+      html+=`<div class="cart-rest-footer">
+  <div>
+    <div class="crf-subtotal">Total<span>₹${dis.final}</span></div>
+    ${dis.disc>0?`<div class="crf-disc">Discount -₹${dis.disc} applied</div>`:''}
+  </div>
+  <button class="order-btn order-btn-${plat}" onclick="checkout('${plat}',${rid})">Order now →</button>
+</div>`;
+      html+=`</div>`; // cart-rest-section
+    });
+    html+=`</div>`; // cart-plat-section
+  });
+
+  inner.innerHTML=html;
+}
+
+function checkout(plat,rid){
+  const r=RESTS.find(x=>x.id===rid);
+  const slug=r?r.name.toLowerCase().replace(/[^a-z0-9]+/g,'-'):'';
+  const urls={
+    sw:r?`https://www.swiggy.com/city/mumbai/${slug}-rest${rid*1000}`:'swiggy://explore',
+    zm:r?`https://www.zomato.com/mumbai/${slug}/order`:'zomato://c/mumbai/restaurants'
+  };
+  const items=Object.values(cart).filter(v=>v.qty>0&&v.rid===rid&&v.plat===plat);
+  const sub=items.reduce((s,v)=>{const p=(v.plat==='sw'?v.d.sw:v.d.zm)||0;return s+p*v.qty;},0);
+  const dis=bestDisc(plat,sub);
+  const listText=`Order from ${r?.name||'restaurant'} on ${plat==='sw'?'Swiggy':'Zomato'}\n`
+    +items.map(v=>`• ${v.d.n} ×${v.qty}  ₹${((v.plat==='sw'?v.d.sw:v.d.zm)||0)*v.qty}`).join('\n')
+    +`\n──────────────────\nSubtotal ₹${sub}  Discount -₹${dis.disc}  Pay ₹${dis.final}`;
+  try{navigator.clipboard.writeText(listText);}catch(e){}
+  if(typeof window.Android!=='undefined'){
+    try{window.Android.copyToClipboard(listText);}catch(e){}
+    try{window.Android.openAppIntent(plat,urls[plat],0,0,0,0);}catch(e){}
+  }else window.open(urls[plat],'_blank');
+  const btn=document.querySelector(`.order-btn-${plat}[onclick*="${rid}"]`);
+  if(btn){btn.textContent='📋 Copied · Opening…';btn.disabled=true;setTimeout(()=>{btn.disabled=false;btn.textContent='Order now →';},2500);}
+}
+
+// Android back
+window.nexaAndroidBack=function(){
+  if(document.getElementById('cart-panel').classList.contains('open')){closeCart();return true;}
+  if(document.getElementById('menu-panel').classList.contains('open')){closeMenu();return true;}
+  const a=document.querySelector('.view.active');
+  if(a&&a.id!=='view-home'){goTo('home');return true;}
+  return false;
+};
+
+// ════════════════════════════════════
+//  INIT
+// ════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  initTiers();
+  initQR();
+  initCuisineChips();
+  initFoodSearch();
+
+  const pi=document.getElementById('t-pickup'),di=document.getElementById('t-drop');
+  pi.addEventListener('input',e=>{
+    tPid=null;
+    if(e.target.value.length>1)showSug(e.target.value,'t-sug-p',true);
+    else document.getElementById('t-sug-p').classList.remove('open');
+  });
+  di.addEventListener('input',e=>{
+    tDid=null;
+    if(e.target.value.length>1)showSug(e.target.value,'t-sug-d',false);
+    else document.getElementById('t-sug-d').classList.remove('open');
+  });
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('.loc-field')){
+      document.getElementById('t-sug-p').classList.remove('open');
+      document.getElementById('t-sug-d').classList.remove('open');
+    }
+  });
+  document.getElementById('swap-btn').onclick=()=>{
+    [tPid,tDid]=[tDid,tPid];
+    const pv=pi.value;pi.value=di.value;di.value=pv;
+    const pc=document.getElementById('t-pc'),dc=document.getElementById('t-dc');
+    const pct=pc.textContent;pc.textContent=dc.textContent;dc.textContent=pct;
+    if(tPid&&tDid)compareRides();
+  };
+  document.querySelectorAll('.ptab').forEach(t=>t.addEventListener('click',()=>{
+    fPlat=t.dataset.p;
+    document.querySelectorAll('.ptab').forEach(x=>x.classList.remove('on'));t.classList.add('on');renderGrid();
+  }));
+
+  // URL routing — honour ?view= param on load
+  const initialView = getInitialView();
+  if(initialView !== 'home') goTo(initialView);
+
+  // Browser back button support
+  window.addEventListener('popstate', e => {
+    const v = (e.state && e.state.view) || 'home';
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+    document.getElementById('view-'+v).classList.add('active');
+    document.querySelectorAll('.ntab').forEach(t=>t.classList.toggle('on',t.dataset.view===v));
+    if(v==='food'){renderGrid();updateBadge();}
+  });
+
+  // Register service worker for offline support
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('/sw.js').catch(()=>{
+      // sw.js not present in demo mode — silent fail
+    });
+  }
+});
+</script>
+
+<!-- PWA Install Banner -->
+<div id="install-banner" style="
+  display:none;position:fixed;bottom:80px;left:16px;right:16px;
+  background:#1E1E30;border:1px solid rgba(255,255,255,.11);border-radius:12px;
+  padding:14px 16px;display:flex;align-items:center;gap:12px;z-index:90;
+  box-shadow:0 8px 28px rgba(0,0,0,.5);transform:translateY(20px);opacity:0;
+  transition:all .3s cubic-bezier(.4,0,.2,1)">
+  <span style="font-size:24px;flex-shrink:0">📲</span>
+  <div style="flex:1;min-width:0">
+    <div style="font-size:13px;font-weight:700;color:#ECEEF8">Add Nexa to Home Screen</div>
+    <div style="font-size:11px;color:#7878A0;margin-top:1px">Faster access, works offline</div>
+  </div>
+  <button onclick="installApp()" style="padding:7px 14px;background:#FF6B00;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Install</button>
+  <button onclick="this.closest('#install-banner').style.display='none'" style="color:#3E3E58;font-size:16px;padding:4px;cursor:pointer;flex-shrink:0;background:none;border:none">✕</button>
+</div>
+<script>
+// Show install banner after mount (display:none overrides inline style above)
+document.getElementById('install-banner').style.display='';
+</script>
+</body>
+</html>
