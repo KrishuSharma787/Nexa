@@ -1,270 +1,193 @@
-# Nexa — Setup Guide
-Complete setup from zero to working app on Windows.
+# Nexa — Mumbai Price Intelligence
+
+A price comparison platform that shows Uber, Ola, and Rapido fares and Swiggy vs Zomato menu prices side by side — so you never overpay before booking a ride or placing a food order.
+
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg)](https://fastapi.tiangolo.com)
+[![Android](https://img.shields.io/badge/Android-Java-orange.svg)](https://developer.android.com)
 
 ---
 
-## What you need installed first
-- Python 3.x ✅ (already installed)
-- VS Code ⬜ — download from code.visualstudio.com
-- Git ⬜ — download from git-scm.com/download/win  
-- Android Studio ⬜ — download from developer.android.com/studio
+## What it does
+
+- **Ride comparison** — compare fares across 7 vehicle tiers (Bike to Luxury) on Uber, Ola, and Rapido for 50+ Mumbai locations
+- **Food comparison** — see Swiggy and Zomato prices for the same dish side by side, with post-discount totals calculated automatically
+- **Smart cart** — add dishes, compare what you actually pay after platform discounts, order directly from the app
+- **Live prices** — a Playwright scraper pulls real menu prices from Swiggy and Zomato every 3 hours and stores them in MongoDB
 
 ---
 
-## Part 1 — Run the backend locally (30 minutes)
+## Project structure
 
-### Step 1 — Download this folder
-Place the entire `nexa_backend` folder on your Desktop.
+```
+nexa/
+├── api/
+│   └── main.py                        FastAPI server — 7 endpoints
+├── scraper/
+│   ├── swiggy.py                      Intercepts Swiggy's internal menu API
+│   ├── zomato.py                      Intercepts Zomato's internal menu API
+│   └── scheduler.py                   Runs both scrapers every 3 hours
+├── android/
+│   ├── NexaAccessibilityService.java  Reads live prices from platform apps
+│   └── nexa_accessibility_service.xml Android service config
+├── frontend/
+│   └── nexa_final.html                Single-file SPA — the full web app
+├── requirements.txt
+├── render.yaml                        Render deployment config
+├── setup.bat                          Windows one-click local setup
+└── README.md
+```
 
-### Step 2 — Open a terminal
-Press `Windows + R` → type `cmd` → press Enter.
-Navigate to the folder:
-```
-cd Desktop\nexa_backend
-```
+---
 
-### Step 3 — Run the setup script
-```
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Database | MySQL 8 — 9 tables, 3 views, 2 stored procedures |
+| Web frontend | Vanilla HTML / CSS / JavaScript — single-file SPA |
+| Backend API | Python, FastAPI, Motor (async MongoDB driver) |
+| Scraper | Python, Playwright (intercepts internal API calls) |
+| Database (production) | MongoDB Atlas — prices, price history, confirmations |
+| Android | Java, WebView, @JavascriptInterface, AccessibilityService |
+| Deployment | Vercel (frontend), Render (API + scraper) |
+
+---
+
+## Local setup (Windows)
+
+**Requirements:** Python 3.11, Git
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/KrishuSharma787/nexa.git
+cd nexa
+
+# 2. Add your .env file (see .env.example)
+
+# 3. Run the setup script
 setup.bat
 ```
-This installs everything automatically. You will see:
-- Python dependencies installing (2–3 minutes)
-- Playwright downloading Chromium browser (~150MB, 3–4 minutes)
-- MongoDB connection test
-- Server starting
 
-When you see `Uvicorn running on http://0.0.0.0:8000` — the backend is live.
+The setup script:
+- Creates a Python 3.11 virtual environment
+- Installs all dependencies
+- Downloads Playwright Chromium
+- Tests your MongoDB connection
+- Starts the FastAPI server at `http://localhost:8000`
 
-### Step 4 — Test it
-Open your browser and go to:
-```
-http://localhost:8000/docs
-```
-You will see the Nexa API documentation with all endpoints. Try clicking `/api/health` → Execute — it should return `{"status": "ok"}`.
-
-### Step 5 — Run the scraper (gets real Swiggy/Zomato prices)
-Open a **second** terminal window (keep the first one running).
-```
-cd Desktop\nexa_backend
+**To run the scraper** (separate terminal window):
+```bash
 venv\Scripts\activate
-python scraper/scheduler.py
+python scraper\scheduler.py
 ```
-The scraper will:
-1. Open headless Chromium
-2. Visit each restaurant on Swiggy and Zomato
-3. Extract real menu prices
-4. Save them to MongoDB Atlas
-5. Repeat every 3 hours automatically
 
-First run takes about 15–20 minutes for all restaurants.
+---
 
-### Step 6 — Connect the frontend
-Open `nexa_final.html` in VS Code.
-Find this line near the top of the `<script>` section:
+## Environment variables
+
+Create a `.env` file in the root folder. See `.env.example` for the full list. Required keys:
+
+```
+MONGO_URI=mongodb+srv://...
+DELIVERY_LAT=19.0543
+DELIVERY_LNG=72.8414
+DELIVERY_PINCODE=400057
+SWIGGY_SWR=...
+SWIGGY_DEVICE_ID=...
+SWIGGY_SESSION_TID=...
+ZOMATO_PHPSESSID=...
+ZOMATO_CSRF=...
+```
+
+> **Never commit your `.env` file.** It is listed in `.gitignore`.
+
+---
+
+## API endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/health` | Health check |
+| GET | `/api/restaurants` | List all restaurants |
+| GET | `/api/restaurants/{id}/menu` | Menu with live scraped prices |
+| GET | `/api/rides/estimate` | Formula-based fare estimate |
+| GET | `/api/prices/history/{id}/{dish}` | 7-day price trend for a dish |
+| POST | `/api/prices/confirm` | User-reported price confirmation |
+| GET | `/api/search` | Full-text dish search |
+
+Full interactive docs available at `/docs` when the server is running.
+
+---
+
+## How the scraper works
+
+Both Swiggy and Zomato load menu data by making internal JSON API calls when a restaurant page opens. Instead of parsing HTML — which breaks every time the UI is redesigned — the scraper uses Playwright to intercept these network requests and capture the structured JSON response directly.
+
+```python
+async def handle_response(response: Response):
+    if '/dapi/menu/pl' in response.url:
+        data = await response.json()
+        # extract dishes from structured JSON
+```
+
+Prices are stored in two MongoDB collections:
+- `prices` — current price per dish, overwritten each scrape
+- `price_history` — every price ever seen, never deleted (used for trend charts)
+
+---
+
+## Android app
+
+The Android project wraps `nexa_final.html` in a WebView and adds:
+
+- **`@JavascriptInterface` bridge** — JavaScript calls `window.Android.openAppIntent()` to open Uber, Ola, Rapido, Swiggy, or Zomato directly at the right destination
+- **Deep link support** — `?view=travel` and `?view=food` URL params map to Android deep links
+- **Accessibility Service** — passively reads prices from Swiggy, Zomato, Uber, Ola, and Rapido screens when the user browses those apps normally, sending price data to the API without any automation
+
+---
+
+## Deployment
+
+**Frontend** — deploy `frontend/nexa_final.html` to Vercel. Auto-deploys on every push.
+
+**Backend** — `render.yaml` is included for one-click Render deployment. Add environment variables in the Render dashboard (not in code).
+
+After deploying, update `API_BASE` in `nexa_final.html`:
 ```javascript
-const API_BASE = '';   // '' = demo mode
+const API_BASE = 'https://your-render-url.onrender.com';
 ```
-Change it to:
-```javascript
-const API_BASE = 'http://localhost:8000';
-```
-Open `nexa_final.html` in Chrome. Food prices will now show real data with a green `● Live` badge.
 
 ---
 
-## Part 2 — Deploy to Render (makes it live on the internet)
+## Database schema (MySQL)
 
-### Step 1 — Create GitHub repository
-1. Go to github.com → New repository → name it `nexa`
-2. Download Git from git-scm.com/download/win and install it
-3. Open terminal in `nexa_backend` folder:
-```
-git init
-git add .
-git commit -m "Initial Nexa backend"
-git remote add origin https://github.com/YourUsername/nexa.git
-git push -u origin main
-```
-Note: `.env` is in `.gitignore` — your credentials are NOT pushed to GitHub.
+| Table | Rows | Purpose |
+|---|---|---|
+| `users` | — | Registered users |
+| `locations` | 100 | Mumbai GPS landmarks |
+| `routes` | 50 | Pre-computed origin-destination pairs |
+| `ride_prices` | 50 | Formula-based fare estimates per route |
+| `restaurants` | 33 | Real Mumbai restaurants |
+| `dishes` | 900+ | Menu items per restaurant |
+| `platform_prices` | 900+ | Swiggy and Zomato prices per dish |
+| `discounts` | 7 | Tiered discount rules |
+| `orders` | — | Order history |
 
-### Step 2 — Deploy to Render
-1. Go to render.com → Sign up with GitHub
-2. New → Web Service → Connect your `nexa` repository
-3. Render detects `render.yaml` automatically
-4. Go to Environment tab → Add these variables manually (they were excluded from render.yaml for security):
-   - `SWIGGY_SWR` → `2ovA1CPZejgI3CyOk2LrS1Ir7ewZLYw`
-   - `SWIGGY_DEVICE_ID` → `acee8711-1771-2f8f-de75-76b1007615ca`
-   - `SWIGGY_SESSION_TID` → `b7cffaaa726c66592ea269b0e26e09e81...` (full value from your .env)
-   - `ZOMATO_PHPSESSID` → `f648656708e1b4cdd77c8a962ca654fc`
-   - `ZOMATO_CSRF` → `517ef91ce8f18cde5de4cfdebae76a8a`
-5. Click Deploy
-
-Render will build and deploy in 5–8 minutes. Your API URL will be:
-```
-https://nexa-api.onrender.com
-```
-
-### Step 3 — Update the frontend
-In `nexa_final.html`:
-```javascript
-const API_BASE = 'https://nexa-api.onrender.com';
-```
-
-### Step 4 — Deploy the frontend to Vercel
-1. Go to vercel.com → Sign up with GitHub
-2. New Project → Import your GitHub repo or upload `nexa_final.html` directly
-3. Done. Your app is live at `https://nexa.vercel.app` (or similar)
+Key design decisions:
+- `platform_prices` uses nullable columns to enforce platform exclusivity — a `NULL` Zomato price means the dish is unavailable there
+- `optimal_cart_pricing` view uses correlated subqueries against the `discounts` table to compute post-discount totals in real time
+- `price_history` in MongoDB is append-only — every scrape adds a new document, enabling trend analysis
 
 ---
 
-## Part 3 — Android app (iQOO Z9 5G, Android 15)
+## License
 
-### Step 1 — Install Android Studio
-Download from developer.android.com/studio. Run the installer with all defaults.
-First launch takes 15–20 minutes to download the Android SDK.
-
-### Step 2 — Enable Developer Mode on your phone
-1. Settings → About Phone → tap **Build Number** 7 times fast
-2. You will see "You are now a developer!"
-3. Go back → Developer Options → turn on **USB Debugging**
-4. Plug your phone into your laptop with a USB cable
-5. On your phone: tap **Allow** when asked "Allow USB debugging?"
-
-### Step 3 — Open the Android project in Android Studio
-1. Open Android Studio → Open → navigate to your `android_wrapper` folder
-2. Wait for Gradle sync to complete (2–5 minutes)
-3. You will see the project structure in the left panel
-
-### Step 4 — Add the Accessibility Service files
-Copy these two files into your project:
-
-`NexaAccessibilityService.java` → into:
-```
-app/src/main/java/com/nexa/app/NexaAccessibilityService.java
-```
-
-`nexa_accessibility_service.xml` → create this folder and file:
-```
-app/src/main/res/xml/nexa_accessibility_service.xml
-```
-
-### Step 5 — Update AndroidManifest.xml
-Open `app/src/main/AndroidManifest.xml`. 
-
-Inside `<application>`, add:
-```xml
-<service
-    android:name=".NexaAccessibilityService"
-    android:exported="true"
-    android:label="Nexa Price Tracker"
-    android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-    <intent-filter>
-        <action android:name="android.accessibilityservice.AccessibilityService" />
-    </intent-filter>
-    <meta-data
-        android:name="android.accessibilityservice"
-        android:resource="@xml/nexa_accessibility_service" />
-</service>
-```
-
-Inside `<queries>`, add:
-```xml
-<package android:name="in.swiggy.android" />
-<package android:name="com.application.zomato" />
-<package android:name="com.ubercab" />
-<package android:name="com.olacabs.customer" />
-<package android:name="com.rapido.passenger" />
-```
-
-### Step 6 — Update API_BASE in the service
-Open `NexaAccessibilityService.java` and change:
-```java
-private static final String API_BASE = "https://nexa-api.onrender.com";
-```
-to your actual Render URL.
-
-### Step 7 — Update WebAppInterface.java
-Add this method to `WebAppInterface.java`:
-```java
-@JavascriptInterface
-public String getLocalPrices(String restaurantId) {
-    // Called by JavaScript to get any locally-available prices
-    // Returns JSON — future enhancement for offline mode
-    return "{}";
-}
-```
-
-### Step 8 — Build and install on your phone
-1. In Android Studio: Run → Run 'app' (or press Shift+F10)
-2. Select your iQOO Z9 5G from the device list
-3. The app installs and opens on your phone
-
-### Step 9 — Enable the Accessibility Service
-On your phone:
-1. Settings → Accessibility → Installed Services (or Downloaded Apps)
-2. Find **Nexa** → tap it → turn on the toggle
-3. Read the permission dialog → tap Allow
-
-From now on, whenever you open Swiggy, Zomato, Uber, Ola, or Rapido normally, Nexa silently reads prices in the background and sends them to MongoDB.
+MIT — see [LICENSE](LICENSE)
 
 ---
 
-## Part 4 — Refreshing expired cookies
+## Author
 
-Swiggy and Zomato session cookies expire every few weeks. When the scraper starts returning empty results:
-
-### Swiggy cookies refresh
-1. Open Chrome → go to swiggy.com → make sure you're logged in
-2. Press F12 → Application → Cookies → swiggy.com
-3. Find `__SWhr` → copy Value
-4. Find `deviceId` → copy Value  
-5. Find `_session_tid` → copy Value
-6. Update your `.env` file with the new values
-7. On Render: update the environment variables in the dashboard
-
-### Zomato cookies refresh
-1. Chrome → zomato.com → logged in
-2. F12 → Application → Cookies → zomato.com
-3. Find `PHPSESSID` → copy Value
-4. Find `csrf` → copy Value
-5. Update `.env` and Render environment variables
-
----
-
-## Troubleshooting
-
-**"MongoDB connection failed"**
-→ Go to MongoDB Atlas → Network Access → Add `0.0.0.0/0` (Allow from anywhere)
-
-**"No prices found" after running scraper**
-→ Swiggy/Zomato changed their HTML structure. Open the restaurant URL in Chrome, press F12, go to Network tab, reload, look for the API call that returns menu JSON. The URL pattern has changed — share it and I'll update the scraper.
-
-**"Scraper gets blocked after a few restaurants"**
-→ Add `await asyncio.sleep(8)` (increase the delay) in the scraper loop. Also try refreshing your session cookies.
-
-**Android: Accessibility Service not appearing in Settings**
-→ Rebuild the app in Android Studio (Build → Clean Project → Rebuild Project) then reinstall.
-
-**Render cold start (30-second delay on first request)**
-→ This is normal on the free tier. The second request is instant. On demo day, open the app once before your presentation to warm up the server.
-
----
-
-## File structure
-```
-nexa_backend/
-├── .env                    ← your credentials (never commit this)
-├── .gitignore
-├── requirements.txt
-├── render.yaml             ← Render deployment config
-├── setup.bat               ← Windows: double-click to start everything
-├── api/
-│   └── main.py             ← FastAPI server
-├── scraper/
-│   ├── swiggy.py           ← Swiggy price scraper
-│   ├── zomato.py           ← Zomato price scraper
-│   └── scheduler.py        ← runs both every 3 hours
-└── android/
-    ├── NexaAccessibilityService.java
-    └── nexa_accessibility_service.xml
-```
+Krisna Sharma · [github.com/KrishuSharma787](https://github.com/KrishuSharma787)
