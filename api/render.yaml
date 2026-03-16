@@ -1,0 +1,33 @@
+services:
+  # FastAPI backend
+  - type: web
+    name: nexa-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt && playwright install chromium && playwright install-deps
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MONGO_URI
+        value: mongodb+srv://krishusharma787_db_user:MfGdEcQbfT0WfSqo@nexa.mtlyboj.mongodb.net/nexa?retryWrites=true&w=majority&appName=Nexa
+      - key: DELIVERY_LAT
+        value: "19.0543"
+      - key: DELIVERY_LNG
+        value: "72.8414"
+      - key: DELIVERY_PINCODE
+        value: "400057"
+      - key: SWIGGY_SWR
+        sync: false
+      - key: SWIGGY_DEVICE_ID
+        sync: false
+      - key: SWIGGY_SESSION_TID
+        sync: false
+      - key: ZOMATO_PHPSESSID
+        sync: false
+      - key: ZOMATO_CSRF
+        sync: false
+
+  # Scraper background worker (comment out if running locally)
+  # - type: worker
+  #   name: nexa-scraper
+  #   runtime: python
+  #   buildCommand: pip install -r requirements.txt && playwright install chromium && playwright install-deps
+  #   startCommand: python scraper/scheduler.py
