@@ -51,7 +51,7 @@ public class NexaAccessibilityService extends AccessibilityService {
     private static final String PKG_RAPIDO  = "com.rapido.passenger";
 
     // Replace with your deployed Render URL after deployment
-    private static final String API_BASE    = "https://nexa-api.onrender.com";
+    private static final String API_BASE = "https://nexa-2zks.onrender.com";
 
     // Price pattern: ₹ followed by digits (e.g. ₹349, ₹1,200)
     private static final Pattern PRICE_PATTERN = Pattern.compile("₹\\s*([\\d,]+)");
