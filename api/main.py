@@ -10,8 +10,9 @@ Endpoints:
   GET  /api/rides/estimate
   GET  /api/prices/history/:id/:dish
   POST /api/prices/confirm
-  POST /api/prices/batch        ← Accessibility Service food prices
-  POST /api/rides/report        ← Accessibility Service ride fares
+  POST /api/prices/batch
+  POST /api/rides/report
+  POST /api/restaurants/report
   GET  /api/search
 ─────────────────────────────────────────────────────────────────
 """
@@ -52,6 +53,7 @@ async def startup():
         await db.price_history.create_index([('restaurant_id', 1), ('dish_name', 1), ('scraped_at', -1)])
         await db.restaurants.create_index([('swiggy_id', 1)])
         await db.restaurants.create_index([('zomato_slug', 1)])
+        await db.restaurants.create_index([('slug', 1)])
     except Exception as e:
         log.warning(f'Index warning: {e}')
 
@@ -111,6 +113,17 @@ class RideReport(BaseModel):
     fares:  List[dict]
     source: str = 'accessibility'
 
+class RestaurantReport(BaseModel):
+    slug:      str
+    name:      str
+    platform:  str = ''
+    on_swiggy: bool = False
+    on_zomato: bool = False
+    cuisine:   str = ''
+    area:      str = 'Mumbai'
+    rating:    float = 0
+    image_url: str = ''
+
 
 @app.get('/api/health')
 async def health():
@@ -126,7 +139,8 @@ async def get_restaurants(
     mongo_rests = []
     try:
         async for r in db.restaurants.find({}, {'_id': 0}):
-            rest_id = r.get('swiggy_id') or r.get('zomato_slug') or r.get('id', '')
+            rest_id = (r.get('slug') or r.get('swiggy_id') or
+                       r.get('zomato_slug') or r.get('id', ''))
             mongo_rests.append({
                 'id':        rest_id,
                 'name':      r.get('name', ''),
@@ -134,8 +148,8 @@ async def get_restaurants(
                 'area':      r.get('area', ''),
                 'rating':    r.get('rating', 0),
                 'p2':        r.get('price_for_two', 0),
-                'sw':        'swiggy_id' in r or r.get('platform') == 'swiggy',
-                'zm':        'zomato_slug' in r or r.get('platform') == 'zomato',
+                'sw':        r.get('on_swiggy', 'swiggy_id' in r or r.get('platform') == 'swiggy'),
+                'zm':        r.get('on_zomato', 'zomato_slug' in r or r.get('platform') == 'zomato'),
                 'veg':       r.get('veg', False),
                 'image_url': r.get('image_url', ''),
             })
@@ -165,14 +179,15 @@ async def get_menu(restaurant_id: str):
 
     all_names = set(swiggy_dishes) | set(zomato_dishes)
     if not all_names:
-        raise HTTPException(status_code=404, detail='No prices found. Browse this restaurant on Swiggy/Zomato with Nexa active.')
+        raise HTTPException(status_code=404,
+            detail='No prices found. Browse this restaurant on Swiggy/Zomato with Nexa active.')
 
     merged = []
     for name in all_names:
-        sw = swiggy_dishes.get(name)
-        zm = zomato_dishes.get(name)
+        sw   = swiggy_dishes.get(name)
+        zm   = zomato_dishes.get(name)
         base = sw or zm
-        upd = base.get('updated_at')
+        upd  = base.get('updated_at')
         merged.append({
             'name':       name,
             'category':   base.get('category', 'Mains'),
@@ -316,33 +331,9 @@ async def report_rides(body: RideReport):
     return {'status': 'ok', 'saved': saved}
 
 
-@app.get('/api/search')
-async def search(q: str = Query(..., min_length=2)):
-    try:
-        cursor = db.prices.find(
-            {'$text': {'$search': q}},
-            {'score': {'$meta': 'textScore'}, '_id': 0}
-        ).sort([('score', {'$meta': 'textScore'})]).limit(20)
-        results = [d async for d in cursor]
-    except Exception:
-        cursor = db.prices.find(
-            {'dish_name': {'$regex': q, '$options': 'i'}}, {'_id': 0}
-        ).limit(20)
-        results = [d async for d in cursor]
-    return {'results': results, 'query': q}
-class RestaurantReport(BaseModel):
-    slug:      str
-    name:      str
-    platform:  str = ''
-    on_swiggy: bool = False
-    on_zomato: bool = False
-    cuisine:   str = ''
-    area:      str = 'Mumbai'
-    rating:    float = 0
-    image_url: str = ''
-
 @app.post('/api/restaurants/report')
 async def report_restaurant(body: RestaurantReport):
+    """Save restaurant detected by Accessibility Service."""
     now = datetime.now(timezone.utc)
     await db.restaurants.update_one(
         {'slug': body.slug},
@@ -360,4 +351,21 @@ async def report_restaurant(body: RestaurantReport):
         }},
         upsert=True
     )
+    log.info(f'Restaurant saved: {body.name}')
     return {'status': 'ok', 'saved': body.name}
+
+
+@app.get('/api/search')
+async def search(q: str = Query(..., min_length=2)):
+    try:
+        cursor = db.prices.find(
+            {'$text': {'$search': q}},
+            {'score': {'$meta': 'textScore'}, '_id': 0}
+        ).sort([('score', {'$meta': 'textScore'})]).limit(20)
+        results = [d async for d in cursor]
+    except Exception:
+        cursor = db.prices.find(
+            {'dish_name': {'$regex': q, '$options': 'i'}}, {'_id': 0}
+        ).limit(20)
+        results = [d async for d in cursor]
+    return {'results': results, 'query': q}
