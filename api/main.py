@@ -330,3 +330,34 @@ async def search(q: str = Query(..., min_length=2)):
         ).limit(20)
         results = [d async for d in cursor]
     return {'results': results, 'query': q}
+class RestaurantReport(BaseModel):
+    slug:      str
+    name:      str
+    platform:  str = ''
+    on_swiggy: bool = False
+    on_zomato: bool = False
+    cuisine:   str = ''
+    area:      str = 'Mumbai'
+    rating:    float = 0
+    image_url: str = ''
+
+@app.post('/api/restaurants/report')
+async def report_restaurant(body: RestaurantReport):
+    now = datetime.now(timezone.utc)
+    await db.restaurants.update_one(
+        {'slug': body.slug},
+        {'$set': {
+            'slug':       body.slug,
+            'name':       body.name,
+            'on_swiggy':  body.on_swiggy,
+            'on_zomato':  body.on_zomato,
+            'cuisine':    body.cuisine,
+            'area':       body.area,
+            'rating':     body.rating,
+            'image_url':  body.image_url,
+            'updated_at': now,
+            'source':     'accessibility',
+        }},
+        upsert=True
+    )
+    return {'status': 'ok', 'saved': body.name}
